@@ -1,5 +1,6 @@
 const Users = require('../modules/user');
 const bcrypt = require('bcrypt');
+const createRes = require('../../utils/response_utils');
 const userController = {
     getAllUser: async (req, res) => {
         const lstUser = await Users.find({
@@ -52,43 +53,16 @@ const userController = {
             return res.status(500).json({ message: error.message });
         }
     },
-    updateUser: async (req, res) => {
-        const { newValues } = req.body;
-        const { fullname, username, gender, email, story, mobile } = newValues;
-
-        if (!email) return res.status(400).json({ message: 'Email not found' });
-        if (!username)
-            return res.status(400).json({ message: 'Username not found' });
-        if (!fullname)
-            return res.status(400).json({ message: 'Fullname not found' });
-
-        if (req.user.email !== email) {
-            const isExist = await Users.findOne({ email });
-            if (isExist)
-                return res
-                    .status(400)
-                    .json({ message: 'Email already exists' });
-        }
-        if (req.user.username !== username) {
-            const isExist = await Users.findOne({ username });
-            if (isExist)
-                return res
-                    .status(400)
-                    .json({ message: 'Username already exists' });
-        }
+    updateUser: async (req, res,next) => {
+        const newValues = req.body;
 
         try {
-            await Users.findByIdAndUpdate(req.user._id, {
-                fullname,
-                username,
-                gender,
-                email,
-                story,
-                mobile,
+            const newInfo = await Users.findByIdAndUpdate(req.user._id, newValues,{
+                new: true
             });
-            return res.json({ message: 'success' });
+            return res.status(200).json(createRes.success('Chỉnh sửa thành công!',newInfo))
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error)
         }
     },
     changePassword: async (req, res) => {

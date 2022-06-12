@@ -12,8 +12,7 @@ const auth = async (req, res, next) => {
 
         next();
     } catch (error) {
-        res.clearCookie('refreshtoken', { path: '/api/refresh_token' });
-        return res.status(500).json({ message: error.message });
+        return res.status(401).json({message: error.message});
     }
 };
 

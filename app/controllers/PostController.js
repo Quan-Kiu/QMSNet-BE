@@ -1,6 +1,7 @@
 const Posts = require('../modules/post');
 const Users = require('../modules/user');
 const Comments = require('../modules/comment');
+const createRes = require('../../utils/response_utils');
 
 class APIFeatures {
     constructor(query, queryString) {
@@ -22,28 +23,26 @@ class APIFeatures {
 }
 
 const PostController = {
-    createPost: async (req, res) => {
+    createPost: async (req, res,next) => {
         try {
-            const { content, images } = req.body;
-            if (images.length <= 0)
-                return res
-                    .status(400)
-                    .json({ message: 'Vui lòng thêm hình ảnh.' });
-
+            if(req.body?.media?.length<=0 && !req.body.content.trim()){
+                next(createRes.error('Vui lòng nhập nội dung bài viết!'));
+            }
+            if(req.body?.media?.length<=0 && req.body.content.trim().length < 10){
+                next(createRes.error('Nội dung bài viết ít nhất 10 ký tự!'));
+            }
             const newPost = new Posts({
-                content,
-                images,
+                ...req.body,
                 user: req.user._id,
             });
             await newPost.save();
 
-            res.json({
-                message: 'Đã chia sẻ bài viết của bạn.',
+            res.json(createRes.success('Đã chia sẻ bài viết của bạn.',{
                 post: newPost,
                 user: req.user,
-            });
+            }));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error);
         }
     },
 
@@ -68,23 +67,25 @@ const PostController = {
         try {
             const features = new APIFeatures(
                 Posts.find({
-                    user: [...req.user.following, req.user._id,'61c548e06d529141c410df4a'],
+                    user: [...req.user.following, req.user._id],
                 }),
                 req.query
             ).paginating();
             const posts = await features.query
                 .sort('-createdAt')
-                .populate('user likes', 'avatar username fullname followers')
+                .populate('user', 'avatar username fullname followers')
                 .populate({
                     path: 'comments',
                     populate: {
                         path: 'user likes',
                         select: '-password',
                     },
+                    
+
                 });
-            return res.json({ message: 'Success', total: posts.length, posts });
+            return res.json(createRes.success('Thành công', {total: posts.length, posts}));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error);
         }
     },
     getPostsExplore: async (req, res) => {
@@ -149,23 +150,21 @@ const PostController = {
         }
     },
 
-    likePost: async (req, res) => {
+    likePost: async (req, res,next) => {
         try {
             const post = await Posts.findOne({
                 _id: req.params.id,
                 likes: req.user._id,
             });
             if (post)
-                return res
-                    .status(400)
-                    .json({ message: 'Bạn đã like bài đăng này rồi.' });
-
+                return next(createRes.error('Bạn đã like bài đăng này rồi.'))
+                
             const newPost = await Posts.findOneAndUpdate(
                 { _id: req.params.id },
                 { $push: { likes: req.user._id } },
                 { new: true }
             )
-                .populate('user likes', 'avatar username fullname followers')
+                .populate('user', 'avatar username fullname followers')
                 .populate({
                     path: 'comments',
                     populate: {
@@ -174,9 +173,9 @@ const PostController = {
                     },
                 });
 
-            return res.json({ message: 'Like Success.', post: newPost });
+            return res.json(createRes.success('Thích bài viết thành công!', newPost));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error);
         }
     },
     unlikePost: async (req, res) => {
@@ -186,9 +185,8 @@ const PostController = {
                 likes: req.user._id,
             });
             if (!post)
-                return res
-                    .status(400)
-                    .json({ message: 'Bạn chưa like bài đăng này.' });
+            return next(createRes.error('Bạn chưa like bài đăng này.'))
+               
 
             const newPost = await Posts.findOneAndUpdate(
                 { _id: req.params.id },
@@ -204,9 +202,9 @@ const PostController = {
                     },
                 });
 
-            return res.json({ message: 'Unlike Success.', post: newPost });
+                return res.json(createRes.success('Hủy thích bài viết thành công!', newPost));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error);
         }
     },
     savePost: async (req, res) => {

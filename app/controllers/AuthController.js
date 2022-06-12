@@ -1,48 +1,48 @@
 const Users = require('../modules/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const createRes = require('../../utils/response_utils');
 
 const AuthController = {
-    register: async (req, res) => {
+    register: async (req, res,next) => {
+        console.log(req.body)
         try {
             const { fullname, email, password, username } = req.body;
             let newUsername = username.toLowerCase().replace(/ /g, '');
             const user_name = await Users.findOne({ username: newUsername });
             if (user_name)
-                return res
-                    .status(400)
-                    .json({
-                        message:
-                            'Rất tiếc, tên tài khoản này đã tồn tại. Vui lòng sử dụng tên tài khoản khác.',
-                    });
+                return next(createRes.error('Rất tiếc, tên tài khoản này đã tồn tại. Vui lòng sử dụng tên tài khoản khác.'));
             if (username.length < 6)
-                return res.status(400).json({
-                    message: 'Tên tài khoản nhiều hơn 6 ký tự.',
-                });
+                return next(createRes.error(
+                   'Tên tài khoản nhiều hơn 6 ký tự.',
+                ));
             if (username.length > 30)
-                return res.status(400).json({
-                    message: 'Tên tài khoản không quá 30 ký tự.',
-                });
+            return next(createRes.error(
+                'Tên tài khoản không quá 30 ký tự.'
+             ));
+              
             if (fullname.length < 6)
-                return res.status(400).json({
-                    message: 'Họ tên nhiều hơn 6 ký tự.',
-                });
+            return next(createRes.error(
+                'Họ tên nhiều hơn 6 ký tự.',
+             ));
+               
             if (fullname.length > 30)
-                return res.status(400).json({
-                    message: 'Họ tên không quá 30 ký tự.',
-                });
+            return next(createRes.error(
+                'Họ tên không quá 30 ký tự.',
+             ));
+                
 
             const user_email = await Users.findOne({ email });
             if (user_email)
-                return res.status(400).json({
-                    message:
-                        'Rất tiếc, email này đã tồn tại. Vui lòng sử dụng email khác.',
-                });
-
+            return next(createRes.error(
+                'Rất tiếc, email này đã tồn tại. Vui lòng sử dụng email khác.',
+             ));
+               
             if (password.length < 6)
-                return res.status(400).json({
-                    message: 'Mật khẩu nhiều hơn 6 ký tự.',
-                });
+            return next(createRes.error(
+                'Mật khẩu nhiều hơn 6 ký tự.',
+             ));
+               
             const hashPassword = await bcrypt.hash(password, 12);
 
             const newUser = new Users({
@@ -63,20 +63,19 @@ const AuthController = {
 
             await newUser.save();
 
-            return res.status(201).json({
-                message: 'Tạo tài khoản thành công, vui lòng đăng nhập.',
+            return res.status(201).json(createRes.success('Tạo tài khoản thành công, vui lòng đăng nhập.',{
                 accessToken,
                 user: {
                     ...newUser._doc,
                     password: '',
                 },
-            });
+            }));
         } catch (err) {
-            return res.status(500).json({ message: err.message });
+            return next(err);
         }
     },
 
-    login: async (req, res) => {
+    login: async (req, res,next) => {
         try {
             const { email, password } = req.body;
             const user = await Users.findOne({ email }).populate(
@@ -84,17 +83,18 @@ const AuthController = {
                 '-password'
             );
             if (!user)
-                return res.status(400).json({
-                    message:
-                        'Rất tiếc, email của bạn không đúng. Vui lòng kiểm tra lại email.',
-                });
+            return next(createRes.error(
+                'Rất tiếc, email của bạn không đúng. Vui lòng kiểm tra lại email.',
+             ));
+               
+               
 
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch)
-                return res.status(400).json({
-                    message:
-                        'Rất tiếc, mật khẩu của bạn không đúng. Vui lòng kiểm tra lại mật khẩu.',
-                });
+            return next(createRes.error(
+                'Rất tiếc, mật khẩu của bạn không đúng. Vui lòng kiểm tra lại mật khẩu.',
+
+             ));
 
             const accessToken = createAccessToken({ id: user._id });
             const refreshToken = refreshAccessToken({ id: user._id });
@@ -105,59 +105,54 @@ const AuthController = {
                 maxAge: 30 * 7 * 24 * 60 * 60 * 1000,
             });
 
-            return res.status(201).json({
-                message: 'Đăng nhập thành công.',
+            return res.status(201).json(createRes.success( 'Đăng nhập thành công.',{
                 accessToken,
                 user: {
                     ...user._doc,
                     password: '',
                 },
-            });
+            }));
         } catch (err) {
-            res.status(500).json({ message: err.message });
+            next(err);
         }
     },
 
-    logout: async (req, res) => {
+    logout: async (req, res,next) => {
         try {
             res.clearCookie('refreshtoken', { path: '/api/refresh_token' });
-            return res.status(200).json({ message: 'Đăng xuất thành công' });
+            return res.status(200).json(createRes.success('Đăng xuất thành công'));
         } catch (err) {
-            return res.status(500).json({ message: err.message });
+            return next(err);
         }
     },
 
-    generateAccessToken: async (req, res) => {
+
+
+    generateAccessToken: async (req, res,next) => {
         try {
             const rf_token = req.cookies.refreshtoken;
             if (!rf_token) {
-                return res
-                    .status(400)
-                    .json({ message: 'Vui lòng đăng nhập lại.' });
+                return next(createRes.error('Vui lòng đăng nhập lại.'))
             }
-
             jwt.verify(
                 rf_token,
                 process.env.REFRESH_TOKEN_SECRET,
                 async (err, result) => {
                     if (err)
-                        return res
-                            .status(400)
-                            .json({ message: 'Vui lòng đăng nhập lại.' });
+                        return next(createRes.error('Vui lòng đăng nhập lại.'))
                     const user = await Users.findById(result.id)
                         .select('-password')
                         .populate('followers following', '-password')
                         .populate('saved', '');
                     if (!user)
-                        return res
-                            .status(400)
-                            .json({ message: 'Tài khoản không tồn tại.' });
+                        return next(createRes.error('Tài khoản không tồn tại.'))
                     const accessToken = createAccessToken({ id: result.id });
-                    res.status(200).json({ accessToken: accessToken, user });
+
+                    res.status(200).json(createRes.success('Thành công',{ accessToken, user }));
                 }
             );
         } catch (err) {
-            res.status(500).json({ message: err.message });
+            next(err);
         }
     },
 };

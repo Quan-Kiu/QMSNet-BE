@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema(
             unique: true,
         },
 
+
         password: {
             type: 'String',
             required: true,
@@ -32,31 +33,46 @@ const userSchema = new mongoose.Schema(
         },
 
         avatar: {
-            type: 'String',
-            default:
-                'https://res.cloudinary.com/quankiu/image/upload/v1640319328/qkmedia/default-avatar_hsejek.png',
+            public_id: {type:String,
+                default: 'qmedia/fhphniflhpcrkm84qnlc'
+             },
+            url: {type:String,
+            default: 'http://res.cloudinary.com/quankiu/image/upload/v1654968194/qmedia/fhphniflhpcrkm84qnlc.png'},
+            
         },
-
-        role: {
-            type: 'String',
-            default: 'member',
-        },
-
         gender: {
-            type: 'String',
-            default: 'Nam',
+            type: 'Number',
+            default: 1,
         },
-
+        dob: {
+            type: 'String'
+        },
+        works: [{
+            name: String,
+            position: String,
+            working: Boolean
+        }],
+        schools: [{
+            name: String,
+            learning: Boolean
+        }],
+        maritalStatus:{
+            type: 'Number',
+            enum: [1,2],
+            default: 1,
+        },
+        address: {
+            province: String,
+            district: String,
+        },
+        countryside:{ 
+            province: String,
+            district: String,
+        },
         mobile: {
             type: 'String',
             default: '',
         },
-
-        address: {
-            type: 'String',
-            default: '',
-        },
-
         story: {
             type: 'String',
             default: '',
@@ -69,7 +85,6 @@ const userSchema = new mongoose.Schema(
                 ref: 'User',
             },
         ],
-
         following: [
             {
                 type: mongoose.Types.ObjectId,
@@ -77,10 +92,17 @@ const userSchema = new mongoose.Schema(
             },
         ],
         saved: [{ type: mongoose.Types.ObjectId, ref: 'Post' }],
+        isAdmin: {
+            type: Boolean,
+            default: false
+        },
+
+
     },
     {
         timestamps: true,
     }
 );
+
 
 module.exports = mongoose.model('User', userSchema);
