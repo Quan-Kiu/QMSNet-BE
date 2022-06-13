@@ -31,7 +31,7 @@ const CommentController = {
                 .populate({
                     path: 'comments',
                     populate: {
-                        path: 'user likes',
+                        path: 'user',
                         select: '-password',
                     },
                 });
@@ -80,13 +80,14 @@ const CommentController = {
         }
     },
 
-    likeComment: async (req, res) => {
+    likeComment: async (req, res,next) => {
         const comment = await Comments.findOne({
             _id: req.params.id,
             likes: req.user._id,
         });
-        if (comment)
-        return next(createRes.error( 'Bạn đã like bình luận này rồi.' ))
+        if (comment){
+            return next(createRes.error( 'Bạn đã like bình luận này rồi.' ))
+        }
            
         const newComment = await Comments.findOneAndUpdate(
             { _id: req.params.id },
@@ -94,12 +95,18 @@ const CommentController = {
                 $push: {
                     likes: req.user._id,
                 },
+            })
+        const post = await Posts.findOne({_id: newComment.postId}).populate('user', 'avatar username fullname followers')
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'user',
+                select: '-password',
             },
-            { new: true }
-        ).populate('user', 'avatar username fullname followers');
-        return res.status(200).json(createRes.success('Thành công',newComment));
+        });;
+        return res.status(200).json(createRes.success('Thành công',post));
     },
-    unlikeComment: async (req, res) => {
+    unlikeComment: async (req, res,next) => {
         const comment = await Comments.findOne({
             _id: req.params.id,
             likes: req.user._id,
@@ -113,10 +120,16 @@ const CommentController = {
                 $pull: {
                     likes: req.user._id,
                 },
+            })
+        const post = await Posts.findOne({_id: newComment.postId}).populate('user', 'avatar username fullname followers')
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'user',
+                select: '-password',
             },
-            { new: true }
-        ).populate('user', 'avatar username fullname followers');
-        return res.status(200).json(createRes.success('Thành công',newComment));
+        });;
+        return res.status(200).json(createRes.success('Thành công',post));
        
     },
 };

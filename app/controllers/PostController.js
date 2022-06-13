@@ -77,7 +77,7 @@ const PostController = {
                 .populate({
                     path: 'comments',
                     populate: {
-                        path: 'user likes',
+                        path: 'user',
                         select: '-password',
                     },
                     
@@ -109,26 +109,24 @@ const PostController = {
         }
     },
 
-    getPostById: async (req, res) => {
+    getPostById: async (req, res,next) => {
         try {
             const post = await Posts.findOne({ _id: req.params.id })
                 .populate('user likes', 'avatar username fullname followers')
                 .populate({
                     path: 'comments',
                     populate: {
-                        path: 'user likes',
+                        path: 'user',
                         select: '-password',
                     },
                 });
 
             if (!post)
-                return res
-                    .status(400)
-                    .json({ message: 'Không tồn tại bài đăng này.' });
-
-            return res.json({ post, message: 'Thành công' });
+                return next(createRes.error('Không tồn tại bài đăng này.'))
+               
+            return res.json(createRes.success('Thành công',post));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error);
         }
     },
 
@@ -168,7 +166,7 @@ const PostController = {
                 .populate({
                     path: 'comments',
                     populate: {
-                        path: 'user likes',
+                        path: 'user',
                         select: '-password',
                     },
                 });
@@ -197,7 +195,7 @@ const PostController = {
                 .populate({
                     path: 'comments',
                     populate: {
-                        path: 'user likes',
+                        path: 'user',
                         select: '-password',
                     },
                 });
