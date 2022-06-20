@@ -2,9 +2,11 @@ const mongoose = require('mongoose');
 
 const conversationSchema = new mongoose.Schema(
     {
-        recipients: [{ type: mongoose.Types.ObjectId, ref: 'User' }],
+        participants: [{ type: mongoose.Types.ObjectId, ref: 'User' }],
         text: String,
-        media: Array,
+        media: {
+            type: {url: String,public_id: String}
+        },
         icon: { type: Boolean, default: false },
         call: Object,
         isRead: Boolean,

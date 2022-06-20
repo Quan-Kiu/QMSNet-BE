@@ -91,6 +91,7 @@ const userSchema = new mongoose.Schema(
                 ref: 'User',
             },
         ],
+        userSettings: Object,
         saved: [{ type: mongoose.Types.ObjectId, ref: 'Post' }],
         isAdmin: {
             type: Boolean,

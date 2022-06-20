@@ -1,3 +1,4 @@
+const createRes = require('../../utils/response_utils');
 const Conversations = require('../modules/conversation');
 const Messages = require('../modules/message');
 
@@ -16,76 +17,63 @@ class APIFeatures {
     }
 }
 const MessageController = {
-    createMessage: async (req, res) => {
+    createMessage: async (req, res,next) => {
         try {
             const { recipient, sender, text, media, call, icon, isRead } =
                 req.body;
-            if (!text && media.length === 0 && !call && !icon) return;
+            if (!text && media?.length === 0 && !call && !icon) return;
             const newConversations = await Conversations.findOneAndUpdate(
                 {
                     $or: [
-                        { recipients: [sender, recipient] },
-                        { recipients: [recipient, sender] },
+                        { participants: [req.body.sender, req.body.recipient] },
+                        { participants: [req.body.recipient, req.body.sender] },
                     ],
                 },
                 {
-                    recipients: [sender, recipient],
-                    text,
-                    media,
-                    icon: icon ? true : false,
-                    call,
-                    isRead,
+                    participants: [req.body.sender, req.body.recipient],
+                    ...req.body
                 },
                 {
                     new: true,
                     upsert: true,
                 }
-            ).populate('recipients', '_id avatar username fullname');
+            ).populate('participants', '_id avatar username fullname');
 
             const newMessage = new Messages({
                 conversation: newConversations._id,
-                sender: newConversations.recipients[0],
-                call,
-                recipient: newConversations.recipients[1],
-                text,
-                media,
-                icon,
+                ...req.body
             });
 
             await newMessage.save();
 
-            return res.json({
+            return res.json(createRes.success('Thành công',{
                 conversation: newConversations,
                 message: newMessage,
-            });
+            }));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error)
         }
     },
 
-    getMessages: async (req, res) => {
+    getMessages: async (req, res,next) => {
         try {
             const feature = new APIFeatures(
                 Messages.find({
-                    $or: [
-                        { sender: req.user._id, recipient: req.params.id },
-                        { sender: req.params.id, recipient: req.user._id },
-                    ],
+                    conversation: req.params.id
                 }),
                 req.query
             ).paginating();
 
             const messages = await feature.query
-                .populate('sender', '_id avatar username fullname')
                 .sort('-createdAt');
 
-            return res.json({
+            return res.json(createRes.success('Thành công!',{
                 _id: req.params.id,
                 messages,
-                total: messages.length,
-            });
+                pagination: {...req.query,count: messages.length}
+            }));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error);
         }
     },
     updateConversation: async (req, res) => {
@@ -93,8 +81,8 @@ const MessageController = {
             const conversation = await Conversations.findOneAndUpdate(
                 {
                     $or: [
-                        { recipients: [req.user._id, req.params.id] },
-                        { recipients: [req.params.id, req.user._id] },
+                        { participants: [req.user._id, req.params.id] },
+                        { participants: [req.params.id, req.user._id] },
                     ],
                 },
                 {
@@ -105,32 +93,28 @@ const MessageController = {
                 }
             )
                 .select('-_id')
-                .populate('recipients', '_id avatar username fullname');
-            res.json({ conversation });
+                .populate('participants', '_id avatar username fullname');
+            res.json(createRes.success('Thành công!',conversation));
         } catch (error) {
             return res.status(500).json({ message: err.message });
         }
     },
 
-    getConversations: async (req, res) => {
+    getConversations: async (req, res,next) => {
         try {
             const feature = new APIFeatures(
                 Conversations.find({
-                    recipients: req.user._id,
+                    participants: req.user._id,
                 }),
                 req.query
             ).paginating();
             const conversations = await feature.query
                 .sort('-updatedAt')
-                .populate('recipients', '_id avatar username fullname');
-
-            res.json({
-                user: req.user._id,
-                data: conversations,
-                total: conversations.length,
-            });
+                .populate('participants', '_id avatar username fullname');
+            return res.json(createRes.success('Thành công!',conversations,
+            ))
         } catch (err) {
-            return res.status(500).json({ message: err.message });
+            return next(err);
         }
     },
 

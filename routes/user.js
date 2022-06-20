@@ -4,13 +4,14 @@ const auth = require('../middlewares/auth');
 
 const userController = require('../app/controllers/UserController');
 
-router.patch('/user/changeavatar', auth, userController.changeAvatar);
-router.patch('/user/updateuser', auth, userController.updateUser);
-router.patch('/user/changepassword', auth, userController.changePassword);
-router.patch('/user/follow/:id', auth, userController.follow);
-router.patch('/user/unfollow/:id', auth, userController.unFollow);
+router.patch('/users/changeavatar', auth, userController.changeAvatar);
+router.patch('/users/updateuser', auth, userController.updateUser);
+router.patch('/users/changepassword', auth, userController.changePassword);
+router.patch('/users/follow/:id', auth, userController.follow);
+router.patch('/users/unfollow/:id', auth, userController.unFollow);
 router.get('/search', auth, userController.searchUser);
-router.get('/user/all', auth, userController.getAllUser);
-router.get('/user/suggestions', auth, userController.suggestionsUser);
-router.get('/user/:id', auth, userController.getUser);
+router.get('/users/all', auth, userController.getAllUser);
+router.get('/users/suggestions', auth, userController.suggestionsUser);
+router.get('/users/:id', auth, userController.getUser);
+router.post('/users/userSettings', auth, userController.updateUserSetting);
 module.exports = router;

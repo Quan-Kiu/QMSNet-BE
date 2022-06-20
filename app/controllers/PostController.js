@@ -83,7 +83,11 @@ const PostController = {
                     
 
                 });
-            return res.json(createRes.success('Thành công', {total: posts.length, posts}));
+            return res.json(createRes.success('Thành công', {posts,pagination: {
+                page: req?.query?.page,
+                limit: req?.query?.limit,
+                count: posts.length,
+            }}));
         } catch (error) {
             return next(error);
         }
@@ -112,7 +116,7 @@ const PostController = {
     getPostById: async (req, res,next) => {
         try {
             const post = await Posts.findOne({ _id: req.params.id })
-                .populate('user likes', 'avatar username fullname followers')
+                .populate('user', 'avatar username fullname followers')
                 .populate({
                     path: 'comments',
                     populate: {
@@ -132,17 +136,25 @@ const PostController = {
 
     getPostsByUser: async (req, res) => {
         try {
-            req.query.limit = 12;
+            req.query.limit = 10;
             const data = await Posts.find({
                 user: req.params.id,
-            }).sort('-createdAt');
+            }).sort('-createdAt')
+            .populate('user', 'avatar username fullname followers')
+                .populate({
+                    path: 'comments',
+                    populate: {
+                        path: 'user',
+                        select: '-password',
+                    },
+                });
             const total = data.length;
 
             const feature = new APIFeatures(data, req.query).paginating(true);
 
             const posts = feature.query;
 
-            return res.json({ posts, user: req.params.id, total });
+            return res.json(createRes.success('Thành công',{ posts, total }));
         } catch (error) {
             return res.status(500).json({ message: error.message });
         }

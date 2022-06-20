@@ -10,7 +10,7 @@ const userController = {
             lstUser,
         });
     },
-    searchUser: async (req, res) => {
+    searchUser: async (req, res,next) => {
         try {
             const users = await Users.find({
                 $and: [
@@ -20,22 +20,22 @@ const userController = {
             })
                 .limit(10)
                 .select('username avatar fullname');
-            return res.status(200).json({ users });
+            return res.status(200).json(createRes.success('Thành công',users));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error);
         }
     },
-    getUser: async (req, res) => {
+    getUser: async (req, res,next) => {
         try {
             const user = await Users.findById(req.params.id)
                 .select('-password')
-                .populate('followers following', '-password');
             if (!user)
-                return res.status(400).json({ message: 'User not found' });
+                return next(createRes.error('Người dùng không tồn tại'))
 
-            return res.json(user);
+            
+            return res.json(createRes.success('Thành công!',user));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            next(error);
         }
     },
     changeAvatar: async (req, res) => {
@@ -101,57 +101,53 @@ const userController = {
             });
         }
     },
-    follow: async (req, res) => {
+    follow: async (req, res,next) => {
         try {
             const user = await Users.findOne({
                 _id: req.params.id,
                 followers: req.user._id,
             });
             if (user)
-                return res
-                    .status(400)
-                    .json({ message: 'Bạn đã theo dõi tài khoản này rồi.' });
-            await Users.findOneAndUpdate(
+                next(createRes.error('Bạn đã theo dõi tài khoản này rồi.'))
+                
+            const follower = await Users.findOneAndUpdate(
                 { _id: req.params.id },
                 { $push: { followers: req.user._id } },
                 { new: true }
-            );
-            await Users.findOneAndUpdate(
+            ).select('-password')
+            const following = await Users.findOneAndUpdate(
                 { _id: req.user._id },
                 { $push: { following: req.params.id } },
                 { new: true }
-            );
+            ).select('-password')
 
-            return res.json({ message: 'Follow Success' });
+            return res.json(createRes.success('Follow thành công',{follower,following}));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            next(error)
         }
     },
-    unFollow: async (req, res) => {
+    unFollow: async (req, res,next) => {
         try {
             const user = await Users.findOne({
                 _id: req.params.id,
                 followers: req.user._id,
             });
             if (!user)
-                return res
-                    .status(400)
-                    .json({ message: 'Bạn chưa theo dõi tài khoản này.' });
-
-            await Users.findOneAndUpdate(
+                return next(createRes.error('Bạn chưa theo dõi tài khoản này.'))
+                const follower = await Users.findOneAndUpdate(
                 { _id: req.params.id },
                 { $pull: { followers: req.user._id } },
                 { new: true }
-            );
-            await Users.findOneAndUpdate(
+            ).select('-password')
+            const following = await Users.findOneAndUpdate(
                 { _id: req.user._id },
                 { $pull: { following: req.params.id } },
                 { new: true }
-            );
+            ).select('-password')
 
-            return res.json({ message: 'UnFollow Success' });
+            return res.json(createRes.success('Unfollow thành công',{follower,following}));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error);
         }
     },
     suggestionsUser: async (req, res) => {
@@ -189,6 +185,25 @@ const userController = {
             return res.status(500).json({ msg: err.message });
         }
     },
+
+    updateUserSetting : async (req, res,next)=>{
+        try {
+            const data = req.body;
+            const currentSetting = req.user.userSettings;
+            const newSettings ={...currentSetting,...data};
+            const newUser = await Users.findOneAndUpdate({_id: req.user._id}, {
+                userSettings: newSettings,
+            },{
+                new: true
+            });
+
+            return res.json(createRes.success('Thành công',newUser));
+
+        } catch (error) {
+            next(error);
+            
+        }
+    }
 };
 
 module.exports = userController;
