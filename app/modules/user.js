@@ -78,6 +78,13 @@ const userSchema = new mongoose.Schema(
             default: '',
             maxLength: 200,
         },
+        friends: [
+            {
+                type: mongoose.Types.ObjectId,
+                ref: 'User',
+            },
+
+        ],
 
         followers: [
             {

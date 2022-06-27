@@ -11,7 +11,7 @@ const { ExpressPeerServer } = require('peer');
 
 // Middleware
 app.use(express.json());
-app.use(cors({ credentials: true, origin: ["http://localhost:3000", "http://localhost:5000"] }));
+app.use(cors({ credentials: true, origin: ["http://localhost:3000", "http://localhost:5000", "http://192.168.1.2:3000", "http://192.168.1.2:5000"] }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -20,11 +20,16 @@ db.connect();
 
 const http = require('http').Server(app);
 
-// const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+    cors: {
+        origin: ["http://localhost:3000", "http://localhost:5000", "http://192.168.1.2:3000", "http://192.168.1.2:5000"],
+        methods: ["GET", "POST"]
+    }
+});
 
-// io.on('connection', (socket) => {
-//     socketSever(socket);
-// });
+io.on('connection', (socket) => {
+    socketSever(socket);
+});
 
 // ExpressPeerServer(http, {
 //     path: '/',
@@ -35,19 +40,19 @@ routes(app);
 
 // Handle 404 errors
 
-app.use((req,res,next)=>{
+app.use((req, res, next) => {
     const error = new Error('NotFound');
     error.status = 404;
-    next(error);   
+    next(error);
 })
 
 // Handle Error
 
-app.use((error,req, res, next)=>{
+app.use((error, req, res, next) => {
     const err = error || {};
     const status = err.status || 500;
 
-    return res.status(status).json({success: false,message: err.message});
+    return res.status(status).json({ success: false, message: err.message });
 })
 
 

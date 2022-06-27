@@ -1,6 +1,7 @@
 const Posts = require('../modules/post');
 const Users = require('../modules/user');
 const Comments = require('../modules/comment');
+const Notifies = require('../modules/notify');
 const createRes = require('../../utils/response_utils');
 
 class APIFeatures {
@@ -23,12 +24,12 @@ class APIFeatures {
 }
 
 const PostController = {
-    createPost: async (req, res,next) => {
+    createPost: async (req, res, next) => {
         try {
-            if(req.body?.media?.length<=0 && !req.body.content.trim()){
+            if (req.body?.media?.length <= 0 && !req.body.content.trim()) {
                 next(createRes.error('Vui lòng nhập nội dung bài viết!'));
             }
-            if(req.body?.media?.length<=0 && req.body.content.trim().length < 10){
+            if (req.body?.media?.length <= 0 && req.body.content.trim().length < 10) {
                 next(createRes.error('Nội dung bài viết ít nhất 10 ký tự!'));
             }
             const newPost = new Posts({
@@ -37,7 +38,7 @@ const PostController = {
             });
             await newPost.save();
 
-            res.json(createRes.success('Đã chia sẻ bài viết của bạn.',{
+            res.json(createRes.success('Đã chia sẻ bài viết của bạn.', {
                 post: newPost,
                 user: req.user,
             }));
@@ -68,6 +69,7 @@ const PostController = {
             const features = new APIFeatures(
                 Posts.find({
                     user: [...req.user.following, req.user._id],
+                    status: 1
                 }),
                 req.query
             ).paginating();
@@ -80,14 +82,16 @@ const PostController = {
                         path: 'user',
                         select: '-password',
                     },
-                    
+
 
                 });
-            return res.json(createRes.success('Thành công', {posts,pagination: {
-                page: req?.query?.page,
-                limit: req?.query?.limit,
-                count: posts.length,
-            }}));
+            return res.json(createRes.success('Thành công', {
+                posts, pagination: {
+                    page: req?.query?.page,
+                    limit: req?.query?.limit,
+                    count: posts.length,
+                }
+            }));
         } catch (error) {
             return next(error);
         }
@@ -113,7 +117,7 @@ const PostController = {
         }
     },
 
-    getPostById: async (req, res,next) => {
+    getPostById: async (req, res, next) => {
         try {
             const post = await Posts.findOne({ _id: req.params.id })
                 .populate('user', 'avatar username fullname followers')
@@ -127,8 +131,8 @@ const PostController = {
 
             if (!post)
                 return next(createRes.error('Không tồn tại bài đăng này.'))
-               
-            return res.json(createRes.success('Thành công',post));
+
+            return res.json(createRes.success('Thành công', post));
         } catch (error) {
             return next(error);
         }
@@ -140,7 +144,7 @@ const PostController = {
             const data = await Posts.find({
                 user: req.params.id,
             }).sort('-createdAt')
-            .populate('user', 'avatar username fullname followers')
+                .populate('user', 'avatar username fullname followers')
                 .populate({
                     path: 'comments',
                     populate: {
@@ -154,36 +158,67 @@ const PostController = {
 
             const posts = feature.query;
 
-            return res.json(createRes.success('Thành công',{ posts, total }));
+            return res.json(createRes.success('Thành công', { posts, total }));
         } catch (error) {
             return res.status(500).json({ message: error.message });
         }
     },
 
-    likePost: async (req, res,next) => {
+    likePost: async (req, res, next) => {
         try {
             const post = await Posts.findOne({
                 _id: req.params.id,
-                likes: req.user._id,
             });
-            if (post)
+            if (post.likes.includes(req.user._id))
                 return next(createRes.error('Bạn đã like bài đăng này rồi.'))
-                
-            const newPost = await Posts.findOneAndUpdate(
-                { _id: req.params.id },
-                { $push: { likes: req.user._id } },
-                { new: true }
-            )
-                .populate('user', 'avatar username fullname followers')
-                .populate({
-                    path: 'comments',
-                    populate: {
-                        path: 'user',
-                        select: '-password',
-                    },
-                });
+            const isAuthorLiked = post.likes.includes(post.user);
+            let newPost;
+            if (post.user.toString() === req.user._id.toString()) {
+                newPost = await Posts.findOneAndUpdate(
+                    { _id: req.params.id },
+                    { $push: { likes: req.user._id } },
+                    { new: true }
+                )
+                    .populate('user', 'avatar username fullname followers')
+                    .populate({
+                        path: 'comments',
+                        populate: {
+                            path: 'user',
+                            select: '-password',
+                        },
+                    })
+            } else {
+                const [res] = await Promise.all([Posts.findOneAndUpdate(
+                    { _id: req.params.id },
+                    { $push: { likes: req.user._id } },
+                    { new: true }
+                )
+                    .populate('user', 'avatar username fullname followers')
+                    .populate({
+                        path: 'comments',
+                        populate: {
+                            path: 'user',
+                            select: '-password',
+                        },
+                    }), Notifies.findOneAndUpdate({
+                        postId: req.params.id,
+                    }, {
+                        text: `${post.likes.length === 0 ? 'đã thích bài viết của bạn.' : post.likes.length === 1 ? isAuthorLiked ? 'đã thích bài viết của bạn.' : 'và 1 người khác đã thích bài viết của bạn.' : isAuthorLiked ? `và ${post.likes.length - 1} người khác đã thích bài viết của bạn.` : `và ${post.likes.length} người khác đã thích bài viết của bạn.`} `,
+                        content: post?.content,
+                        media: post?.media,
+                        postId: post?._id,
+                        user: req.user,
+                        recipients: [post.user],
+                        isRead: false,
+                        action: 2,
+                    }, {
+                        upsert: true,
+                    }).populate('user', 'avatar username fullname followers')])
+                newPost = res;
+            }
 
             return res.json(createRes.success('Thích bài viết thành công!', newPost));
+
         } catch (error) {
             return next(error);
         }
@@ -195,8 +230,8 @@ const PostController = {
                 likes: req.user._id,
             });
             if (!post)
-            return next(createRes.error('Bạn chưa like bài đăng này.'))
-               
+                return next(createRes.error('Bạn chưa like bài đăng này.'))
+
 
             const newPost = await Posts.findOneAndUpdate(
                 { _id: req.params.id },
@@ -212,7 +247,7 @@ const PostController = {
                     },
                 });
 
-                return res.json(createRes.success('Hủy thích bài viết thành công!', newPost));
+            return res.json(createRes.success('Hủy thích bài viết thành công!', newPost));
         } catch (error) {
             return next(error);
         }

@@ -17,9 +17,9 @@ class APIFeatures {
     }
 }
 const MessageController = {
-    createMessage: async (req, res,next) => {
+    createMessage: async (req, res, next) => {
         try {
-            const { recipient, sender, text, media, call, icon, isRead } =
+            const { recipient, sender, text, media, call, icon } =
                 req.body;
             if (!text && media?.length === 0 && !call && !icon) return;
             const newConversations = await Conversations.findOneAndUpdate(
@@ -31,7 +31,11 @@ const MessageController = {
                 },
                 {
                     participants: [req.body.sender, req.body.recipient],
-                    ...req.body
+                    ...req.body,
+                    media: media || null,
+                    icon: icon || false,
+                    text: text || '',
+                    read: [req.body.sender],
                 },
                 {
                     new: true,
@@ -46,7 +50,7 @@ const MessageController = {
 
             await newMessage.save();
 
-            return res.json(createRes.success('Thành công',{
+            return res.json(createRes.success('Thành công', {
                 conversation: newConversations,
                 message: newMessage,
             }));
@@ -55,7 +59,7 @@ const MessageController = {
         }
     },
 
-    getMessages: async (req, res,next) => {
+    getMessages: async (req, res, next) => {
         try {
             const feature = new APIFeatures(
                 Messages.find({
@@ -67,26 +71,25 @@ const MessageController = {
             const messages = await feature.query
                 .sort('-createdAt');
 
-            return res.json(createRes.success('Thành công!',{
+            return res.json(createRes.success('Thành công!', {
                 _id: req.params.id,
                 messages,
-                pagination: {...req.query,count: messages.length}
+                pagination: { ...req.query, count: messages.length }
             }));
         } catch (error) {
             return next(error);
         }
     },
-    updateConversation: async (req, res) => {
+    updateConversation: async (req, res, next) => {
         try {
             const conversation = await Conversations.findOneAndUpdate(
                 {
-                    $or: [
-                        { participants: [req.user._id, req.params.id] },
-                        { participants: [req.params.id, req.user._id] },
-                    ],
+                    _id: req.params.id
                 },
                 {
-                    isRead: true,
+                    $push: {
+                        read: req.user._id
+                    }
                 },
                 {
                     new: true,
@@ -94,13 +97,13 @@ const MessageController = {
             )
                 .select('-_id')
                 .populate('participants', '_id avatar username fullname');
-            res.json(createRes.success('Thành công!',conversation));
+            res.json(createRes.success('Thành công!', conversation));
         } catch (error) {
-            return res.status(500).json({ message: err.message });
+            next(error);
         }
     },
 
-    getConversations: async (req, res,next) => {
+    getConversations: async (req, res, next) => {
         try {
             const feature = new APIFeatures(
                 Conversations.find({
@@ -111,7 +114,7 @@ const MessageController = {
             const conversations = await feature.query
                 .sort('-updatedAt')
                 .populate('participants', '_id avatar username fullname');
-            return res.json(createRes.success('Thành công!',conversations,
+            return res.json(createRes.success('Thành công!', conversations,
             ))
         } catch (err) {
             return next(err);

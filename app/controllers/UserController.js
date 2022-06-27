@@ -1,6 +1,27 @@
 const Users = require('../modules/user');
+const Notifies = require('../modules/notify');
 const bcrypt = require('bcrypt');
 const createRes = require('../../utils/response_utils');
+
+class APIFeatures {
+    constructor(query, queryString) {
+        this.query = query;
+        this.queryString = queryString;
+    }
+
+    paginating(isData) {
+        const page = this.queryString.page * 1 || 1;
+        const limit = this.queryString.limit * 1 || 20;
+        const skip = (page - 1) * limit;
+        if (isData) {
+            this.query = this.query.splice(skip, limit);
+        } else {
+            this.query = this.query.skip(skip).limit(limit);
+        }
+        return this;
+    }
+}
+
 const userController = {
     getAllUser: async (req, res) => {
         const lstUser = await Users.find({
@@ -10,7 +31,7 @@ const userController = {
             lstUser,
         });
     },
-    searchUser: async (req, res,next) => {
+    searchUser: async (req, res, next) => {
         try {
             const users = await Users.find({
                 $and: [
@@ -20,20 +41,20 @@ const userController = {
             })
                 .limit(10)
                 .select('username avatar fullname');
-            return res.status(200).json(createRes.success('Thành công',users));
+            return res.status(200).json(createRes.success('Thành công', users));
         } catch (error) {
             return next(error);
         }
     },
-    getUser: async (req, res,next) => {
+    getUser: async (req, res, next) => {
         try {
             const user = await Users.findById(req.params.id)
                 .select('-password')
             if (!user)
                 return next(createRes.error('Người dùng không tồn tại'))
 
-            
-            return res.json(createRes.success('Thành công!',user));
+
+            return res.json(createRes.success('Thành công!', user));
         } catch (error) {
             next(error);
         }
@@ -53,19 +74,19 @@ const userController = {
             return res.status(500).json({ message: error.message });
         }
     },
-    updateUser: async (req, res,next) => {
+    updateUser: async (req, res, next) => {
         const newValues = req.body;
 
         try {
-            const newInfo = await Users.findByIdAndUpdate(req.user._id, newValues,{
+            const newInfo = await Users.findByIdAndUpdate(req.user._id, newValues, {
                 new: true
             });
-            return res.status(200).json(createRes.success('Chỉnh sửa thành công!',newInfo))
+            return res.status(200).json(createRes.success('Chỉnh sửa thông tin cá nhân thành công!', newInfo))
         } catch (error) {
             return next(error)
         }
     },
-    changePassword: async (req, res) => {
+    changePassword: async (req, res, next) => {
         try {
             const { oldPassword, password, confirmPassword } = req.body;
 
@@ -74,59 +95,58 @@ const userController = {
                 req.user.password
             );
             if (!isPasswordMatch)
-                return res
-                    .status(400)
-                    .json({ message: 'Old Password is not correct' });
+                return next(createRes.error('Mật khẩu cũ không chính xác'));
 
             if (password !== confirmPassword)
-                return res
-                    .status(400)
-                    .json({ message: 'Confirm password does not match' });
+                return next(createRes.error('Mật khẩu không khớp'));
 
             if (password.length < 6)
-                return res.status(400).json({
-                    message: 'Password must be at least 6 characters.',
-                });
+                return next(createRes.error('Mật khẩu ít nhất 6 ký tự'));
 
             const hasPassword = await bcrypt.hash(password, 12);
 
-            await Users.findByIdAndUpdate(user._id, { password: hasPassword });
+            await Users.findByIdAndUpdate(req.user._id, { password: hasPassword });
 
             return res
                 .status(200)
-                .json({ message: 'Password updated successfully' });
+                .json(createRes.success('Thay đổi mật khẩu thành công!'));
         } catch (error) {
-            return res.status(500).json({
-                message: error.message,
-            });
+            next(error);
         }
     },
-    follow: async (req, res,next) => {
+    follow: async (req, res, next) => {
         try {
-            const user = await Users.findOne({
-                _id: req.params.id,
-                followers: req.user._id,
-            });
-            if (user)
+
+            if (req.user.following.includes(req.params.id))
                 next(createRes.error('Bạn đã theo dõi tài khoản này rồi.'))
-                
-            const follower = await Users.findOneAndUpdate(
+            const [follower, following] = await Promise.all([Users.findOneAndUpdate(
                 { _id: req.params.id },
                 { $push: { followers: req.user._id } },
                 { new: true }
-            ).select('-password')
-            const following = await Users.findOneAndUpdate(
+            ).select('-password'), Users.findOneAndUpdate(
                 { _id: req.user._id },
                 { $push: { following: req.params.id } },
                 { new: true }
-            ).select('-password')
+            ).select('-password'), Notifies.findOneAndUpdate({
+                userId: req.user._id,
+                action: 1,
+            }, {
+                text: 'đã theo dõi bạn.',
+                recipients: [req.params.id],
+                user: req.user,
+                isRead: false,
+            }, {
+                upsert: true
+            }
 
-            return res.json(createRes.success('Follow thành công',{follower,following}));
+            )])
+
+            return res.json(createRes.success('Follow thành công', { follower, following }));
         } catch (error) {
             next(error)
         }
     },
-    unFollow: async (req, res,next) => {
+    unFollow: async (req, res, next) => {
         try {
             const user = await Users.findOne({
                 _id: req.params.id,
@@ -134,7 +154,7 @@ const userController = {
             });
             if (!user)
                 return next(createRes.error('Bạn chưa theo dõi tài khoản này.'))
-                const follower = await Users.findOneAndUpdate(
+            const follower = await Users.findOneAndUpdate(
                 { _id: req.params.id },
                 { $pull: { followers: req.user._id } },
                 { new: true }
@@ -145,16 +165,40 @@ const userController = {
                 { new: true }
             ).select('-password')
 
-            return res.json(createRes.success('Unfollow thành công',{follower,following}));
+            return res.json(createRes.success('Unfollow thành công', { follower, following }));
         } catch (error) {
             return next(error);
         }
     },
-    suggestionsUser: async (req, res) => {
-        try {
-            const newArr = [...req.user.following, req.user._id];
 
-            const num = req.query.num || 50;
+    requests: async (req, res, next) => {
+        try {
+            const features = new APIFeatures(
+                Users.find({
+                    _id: { $in: [...req.user.followers], $nin: [...req.user.following] },
+                }),
+                req.query
+            ).paginating();
+            const users = await features.query.select('-password');
+
+            return res.json(createRes.success('Thành công!', {
+                users,
+                pagination: {
+                    ...req.query, count: users.length
+                }
+            }))
+
+        } catch (error) {
+            next(error)
+
+        }
+    },
+
+    suggestionsUser: async (req, res, next) => {
+        try {
+            const newArr = [...req.user.following, ...req.user.followers, req.user._id];
+
+            const num = req.query.num || 8;
 
             const users = await Users.aggregate([
                 { $match: { _id: { $nin: newArr } } },
@@ -177,31 +221,31 @@ const userController = {
                 },
             ]).project('-password');
 
-            return res.json({
+            return res.json(createRes.success('Thành công!', {
                 users,
                 total: users.length,
-            });
+            }));
         } catch (err) {
-            return res.status(500).json({ msg: err.message });
+            return next(err);
         }
     },
 
-    updateUserSetting : async (req, res,next)=>{
+    updateUserSetting: async (req, res, next) => {
         try {
             const data = req.body;
             const currentSetting = req.user.userSettings;
-            const newSettings ={...currentSetting,...data};
-            const newUser = await Users.findOneAndUpdate({_id: req.user._id}, {
+            const newSettings = { ...currentSetting, ...data };
+            const newUser = await Users.findOneAndUpdate({ _id: req.user._id }, {
                 userSettings: newSettings,
-            },{
+            }, {
                 new: true
             });
 
-            return res.json(createRes.success('Thành công',newUser));
+            return res.json(createRes.success('Thành công', newUser));
 
         } catch (error) {
             next(error);
-            
+
         }
     }
 };

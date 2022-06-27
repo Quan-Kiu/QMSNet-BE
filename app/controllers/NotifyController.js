@@ -1,3 +1,4 @@
+const createRes = require('../../utils/response_utils');
 const Notifies = require('../modules/notify');
 
 const NotifyController = {
@@ -26,31 +27,46 @@ const NotifyController = {
         }
     },
 
-    getNotifies: async (req, res) => {
+    getNotifies: async (req, res, next) => {
         try {
             const notifies = await Notifies.find({ recipients: req.user._id })
-                .sort('-createdAt')
+                .sort('-updatedAt')
                 .populate('user', 'avatar username')
-                .limit(30);
+                .limit(40);
 
-            return res.json({ notifies });
+            return res.json(createRes.success('Success', notifies));
         } catch (err) {
-            return res.status(500).json({ msg: err.message });
+            return next(err);
         }
     },
 
-    isReadNotify: async (req, res) => {
+    readAll: async (req, res, next) => {
+        try {
+            await Notifies.updateMany({
+                isRead: false
+            }, {
+                isRead: true
+            })
+            return res.json(createRes.success('Success'));
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    isReadNotify: async (req, res, next) => {
         try {
             const notifies = await Notifies.findOneAndUpdate(
                 { _id: req.params.id },
                 {
                     isRead: true,
-                }
+                }, {
+                timestamps: false,
+            }
             );
 
-            return res.json({ notifies });
+            return res.json(createRes.success('Success', notifies));
         } catch (err) {
-            return res.status(500).json({ msg: err.message });
+            return next(err);
         }
     },
 };
