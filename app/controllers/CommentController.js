@@ -7,7 +7,7 @@ const CommentController = {
     createComment: async (req, res, next) => {
         try {
             const comment = req.body;
-            const post = await Posts.findOne({ _id: comment.postId }).populate({
+            const post = await Posts.findOne({ _id: comment.postId, disableComment: false }).populate({
                 path: 'comments',
                 populate: {
                     path: 'user',
@@ -16,6 +16,12 @@ const CommentController = {
             });
             if (!post)
                 return next(createRes.error('Không có bài đăng này.'))
+            if (post.user._id.toString() !== req.user._id.toString()) {
+                if (post.status === 2) {
+                    return next(createRes.error('Không có bài đăng này.'))
+
+                }
+            }
             comment.user = req.user._id;
             const commentCount = post.comments.reduce((pre, next) => {
 
@@ -121,20 +127,26 @@ const CommentController = {
 
     deleteComment: async (req, res, next) => {
         try {
-            const comments = await Comments.find({
-                $or: [
-                    {
-                        _id: req.params.id,
-                        $or: [
-                            { user: req.user._id },
-                            { postUserId: req.user._id },
-                        ],
-                    },
-                    { reply: req.params.id },
-                ],
+            const comment = await Comments.findOne({
+
+                _id: req.params.id,
             });
-            if (!comments)
+            if (!comment)
                 return next(createRes.error('Bình luận không tồn tại.'))
+            let comments;
+            if (!comment.reply) {
+                comments = await Comments.find({
+                    $or: [
+                        {
+                            _id: req.params.id,
+                            user: req.user._id,
+                        },
+                        { reply: req.params.id },
+                    ],
+                });
+            } else {
+                comments = [comment._id]
+            }
 
             await Comments.deleteMany({
                 _id: { $in: comments },
@@ -150,9 +162,16 @@ const CommentController = {
                 , {
                     new: true,
                 }
-            );
+            ).populate('user', 'avatar username fullname followers')
+                .populate({
+                    path: 'comments',
+                    populate: {
+                        path: 'user',
+                        select: '-password',
+                    }
+                });
 
-            return res.status(200).json(createRes.success('Thành công', { post, comment: newComment }));
+            return res.status(200).json(createRes.success('Thành công', { post }));
         } catch (error) {
             return res.status(500).json({ message: error.message });
         }

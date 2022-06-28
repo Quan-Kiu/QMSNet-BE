@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoose_delete = require('mongoose-delete');
 
 const messageSchema = new mongoose.Schema(
     {
@@ -7,14 +8,17 @@ const messageSchema = new mongoose.Schema(
         recipient: { type: mongoose.Types.ObjectId, ref: 'User' },
         text: String,
         media: {
-            type: {url: String,public_id: String}
+            type: { url: String, public_id: String }
         },
         call: Object,
         icon: { type: Boolean, default: false },
+
     },
     {
         timestamps: true,
     }
 );
+
+messageSchema.plugin(mongoose_delete, { deletedAt: true });
 
 module.exports = mongoose.model('Message', messageSchema);

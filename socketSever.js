@@ -78,6 +78,17 @@ const socketSever = (socket) => {
 
         }
     });
+    socket.on('deleteMessage', (data) => {
+        const clients = users.filter((user) =>
+            [data.message.sender, data.message.recipient].includes(user.id)
+        );
+        if (clients.length > 0) {
+            clients.forEach((client) => {
+                socket.to(`${client.socketId}`).emit('deleteMessageToClient', data);
+            });
+
+        }
+    });
     socket.on('checkUserOnline', ({ user_id, friends }) => {
         let dataToMe = [];
         const yourFriendsOnline = users?.reduce((prev, user) => {

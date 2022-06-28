@@ -35,7 +35,7 @@ const MessageController = {
                     media: media || null,
                     icon: icon || false,
                     text: text || '',
-                    read: [req.body.sender],
+                    read: [req.user._id],
                 },
                 {
                     new: true,
@@ -95,7 +95,6 @@ const MessageController = {
                     new: true,
                 }
             )
-                .select('-_id')
                 .populate('participants', '_id avatar username fullname');
             res.json(createRes.success('Thành công!', conversation));
         } catch (error) {
@@ -113,7 +112,7 @@ const MessageController = {
             ).paginating();
             const conversations = await feature.query
                 .sort('-updatedAt')
-                .populate('participants', '_id avatar username fullname');
+                .populate('participants', '-password');
             return res.json(createRes.success('Thành công!', conversations,
             ))
         } catch (err) {
@@ -121,16 +120,30 @@ const MessageController = {
         }
     },
 
-    deleteMessage: async (req, res) => {
-        try {
-            const deleted = await Messages.findOneAndDelete({
-                _id: req.params.id,
-                sender: req.user._id,
-            });
-            res.json({ deleted, message: 'Xóa tin nhắn thành công!' });
-        } catch (err) {
-            return res.status(500).json({ message: err.message });
-        }
+    deleteMessage: async (req, res, next) => {
+        const message = await Messages.findOne({ _id: req.params.id });
+        if (!message)
+            return next(createRes.error('Tin nhắn này không tồn tại.'))
+        Messages.deleteById(
+            message._id
+        ).exec(async function (err, result) {
+            if (err) {
+                return next(err);
+            }
+            const newConversations = await Conversations.findOneAndUpdate(
+                {
+                    _id: message.conversation
+                },
+                {
+                    text: `${req.user.username} đã gỡ 1 tin nhắn.`,
+                },
+                {
+                    new: true,
+                }
+            ).populate('participants', '_id avatar username fullname');
+
+            return res.json(createRes.success('Thành công!', newConversations));
+        });
     },
     deleteConversation: async (req, res) => {
         try {

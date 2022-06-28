@@ -46,30 +46,64 @@ const PostController = {
             return next(error);
         }
     },
-
-    deletePost: async (req, res) => {
+    updatePost: async (req, res, next) => {
         try {
-            const post = await Posts.findByIdAndDelete({
-                _id: req.params.id,
-                user: req.user._id,
-            });
-            if (!post)
-                return res
-                    .status(400)
-                    .json({ message: 'Không tồn tại bài đăng này.' });
-            await Comments.deleteMany({ _id: { $in: post.comments } });
-            return res.json({ message: 'Xóa bài đăng thành công.', post });
+            if (req.body?.media?.length <= 0 && !req.body.content.trim()) {
+                next(createRes.error('Vui lòng nhập nội dung bài viết!'));
+            }
+            if (req.body?.media?.length <= 0 && req.body.content.trim().length < 10) {
+                next(createRes.error('Nội dung bài viết ít nhất 10 ký tự!'));
+            }
+            const newPost = await Posts.findOneAndUpdate({ _id: req.params.id }, {
+                ...req.body,
+            }, {
+                new: true
+            }).populate('user', 'avatar username fullname followers')
+                .populate({
+                    path: 'comments',
+                    populate: {
+                        path: 'user',
+                        select: '-password',
+                    },
+
+
+                });;
+
+
+            res.json(createRes.success('Chỉnh sửa bài viết thành công.',
+                newPost
+            ));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(error);
         }
+    },
+
+    deletePost: async (req, res, next) => {
+        const post = await Posts.findOne({ _id: req.params.id });
+        if (!post)
+            return next(createRes.error('Bài viết này không tồn tại'))
+        Posts.deleteById(
+            req.params.id).exec(async function (err, result) {
+                if (err)
+                    return next(err)
+                await Comments.deleteMany({ _id: { $in: post.comments } });
+                return res.json(createRes.success('Xóa bài đăng thành công.', post));
+
+            })
+
     },
 
     getPosts: async (req, res) => {
         try {
             const features = new APIFeatures(
                 Posts.find({
-                    user: [...req.user.following, req.user._id],
-                    status: 1
+                    $or: [{
+                        user: [...req.user.following],
+                        status: 1
+
+                    }, {
+                        user: req.user._id
+                    }]
                 }),
                 req.query
             ).paginating();
@@ -128,9 +162,15 @@ const PostController = {
                         select: '-password',
                     },
                 });
-
             if (!post)
                 return next(createRes.error('Không tồn tại bài đăng này.'))
+
+            if (post.user._id.toString() !== req.user._id.toString()) {
+                if (post.status === 2) {
+                    return next(createRes.error('Không tồn tại bài đăng này.'))
+
+                }
+            }
 
             return res.json(createRes.success('Thành công', post));
         } catch (error) {
@@ -141,17 +181,38 @@ const PostController = {
     getPostsByUser: async (req, res) => {
         try {
             req.query.limit = 10;
-            const data = await Posts.find({
-                user: req.params.id,
-            }).sort('-createdAt')
-                .populate('user', 'avatar username fullname followers')
-                .populate({
-                    path: 'comments',
-                    populate: {
-                        path: 'user',
-                        select: '-password',
-                    },
-                });
+            let data;
+            if (req.user._id.toString() === req.params.id) {
+                data = await Posts.find(
+                    {
+                        user: req.params.id,
+                    }).sort('-createdAt')
+                    .populate('user', 'avatar username fullname followers')
+                    .populate({
+                        path: 'comments',
+                        populate: {
+                            path: 'user',
+                            select: '-password',
+                        },
+                    });
+
+            } else {
+                data = await Posts.find(
+                    {
+                        user: req.params.id,
+                        status: 1
+                    }).sort('-createdAt')
+                    .populate('user', 'avatar username fullname followers')
+                    .populate({
+                        path: 'comments',
+                        populate: {
+                            path: 'user',
+                            select: '-password',
+                        },
+                    });
+            }
+
+
             const total = data.length;
 
             const feature = new APIFeatures(data, req.query).paginating(true);
@@ -168,7 +229,10 @@ const PostController = {
         try {
             const post = await Posts.findOne({
                 _id: req.params.id,
+                status: 1
             });
+            if (!post)
+                return next(createRes.error('Không tồn tại bài đăng này, hoặc bài viết đang ở chế độ riêng tư không thể tương tác.'))
             if (post.likes.includes(req.user._id))
                 return next(createRes.error('Bạn đã like bài đăng này rồi.'))
             const isAuthorLiked = post.likes.includes(post.user);
@@ -223,15 +287,17 @@ const PostController = {
             return next(error);
         }
     },
-    unlikePost: async (req, res) => {
+    unlikePost: async (req, res, next) => {
         try {
             const post = await Posts.findOne({
                 _id: req.params.id,
-                likes: req.user._id,
+                status: 1
+
             });
             if (!post)
+                return next(createRes.error('Không tồn tại bài đăng này.'))
+            if (!(post.likes.includes(req.user._id)))
                 return next(createRes.error('Bạn chưa like bài đăng này.'))
-
 
             const newPost = await Posts.findOneAndUpdate(
                 { _id: req.params.id },
@@ -252,65 +318,96 @@ const PostController = {
             return next(error);
         }
     },
-    savePost: async (req, res) => {
+    disableCommentPost: async (req, res, next) => {
+        try {
+            const post = await Posts.findOne({
+                _id: req.params.id,
+
+            });
+            if (!post)
+                return next(createRes.error('Không tồn tại bài đăng này.'))
+
+            const newPost = await Posts.findOneAndUpdate(
+                { _id: req.params.id },
+                { disableComment: !post.disableComment },
+                { new: true }
+            )
+                .populate('user likes', 'avatar username fullname followers')
+                .populate({
+                    path: 'comments',
+                    populate: {
+                        path: 'user',
+                        select: '-password',
+                    },
+                });
+
+            return res.json(createRes.success('Thành công!', newPost));
+        } catch (error) {
+            return next(error);
+        }
+    },
+    savePost: async (req, res, next) => {
         try {
             const user = await Users.findOne({
                 _id: req.user._id,
                 saved: req.params.id,
             });
             if (user)
-                return res
-                    .status(400)
-                    .json({ message: 'Bạn đã lưu bài đăng này rồi.' });
-            await Users.findOneAndUpdate(
+                return next(createRes.error('Bạn đã lưu bài đăng này rồi.'))
+            const newUser = await Users.findOneAndUpdate(
                 { _id: req.user._id },
                 {
                     $push: { saved: req.params.id },
                 }
-            );
-            return res.json({ message: 'Lưu bài đăng thành công!' });
+                , {
+                    new: true
+                }
+            ).select('-password')
+                .populate('saved', '');;
+            return res.json(createRes.success('Lưu bài đăng thành công', newUser));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(err);
         }
     },
-    unsavePost: async (req, res) => {
+    unsavePost: async (req, res, next) => {
         try {
             const user = await Users.findOne({
                 _id: req.user._id,
                 saved: req.params.id,
             });
             if (!user)
-                return res
-                    .status(400)
-                    .json({ message: 'Bạn chưa lưu bài đăng này.' });
-            await Users.findOneAndUpdate(
+                return next(createRes.error('Bạn chưa lưu bài đăng này.'))
+
+            const newUser = await Users.findOneAndUpdate(
                 { _id: req.user._id },
                 {
                     $pull: { saved: req.params.id },
                 }
-            );
-            return res.json({ message: 'Hủy Lưu bài đăng thành công!' });
+                , {
+                    new: true
+                }
+            ).select('-password')
+                .populate('saved', '');;
+            return res.json(createRes.success('Hủy lưu bài đăng thành công', newUser));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            return next(err);
         }
     },
 
-    getPostSavedByUser: async (req, res) => {
+    getPostSavedByUser: async (req, res, next) => {
         try {
             const user = await Users.findOne({ _id: req.params.id });
             if (!user)
-                return res
-                    .status(400)
-                    .json({ message: 'Tài khoản này không tồn tại.' });
+                return next(createRes.error('Người dùng không tồn tại.'))
 
             const posts = await Posts.find({
                 _id: {
                     $in: user.saved,
                 },
             });
-            return res.json({ posts, user: req.params.id });
+            return res.json(createRes.error('Thành công', posts));
         } catch (error) {
-            return res.status(500).json({ message: error.message });
+            next(error)
         }
     },
 };

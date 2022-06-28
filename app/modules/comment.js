@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const mongoose_delete = require('mongoose-delete');
+
 
 const commentSchema = new mongoose.Schema(
     {
@@ -24,5 +26,7 @@ const commentSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+commentSchema.plugin(mongoose_delete, { deletedAt: true });
 
 module.exports = mongoose.model('Comment', commentSchema);
