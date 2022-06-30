@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const mongoose_delete = require('mongoose-delete');
+
 
 const userSchema = new mongoose.Schema(
     {
@@ -33,12 +35,15 @@ const userSchema = new mongoose.Schema(
         },
 
         avatar: {
-            public_id: {type:String,
+            public_id: {
+                type: String,
                 default: 'qmedia/fhphniflhpcrkm84qnlc'
-             },
-            url: {type:String,
-            default: 'http://res.cloudinary.com/quankiu/image/upload/v1654968194/qmedia/fhphniflhpcrkm84qnlc.png'},
-            
+            },
+            url: {
+                type: String,
+                default: 'http://res.cloudinary.com/quankiu/image/upload/v1654968194/qmedia/fhphniflhpcrkm84qnlc.png'
+            },
+
         },
         gender: {
             type: 'Number',
@@ -56,16 +61,16 @@ const userSchema = new mongoose.Schema(
             name: String,
             learning: Boolean
         }],
-        maritalStatus:{
+        maritalStatus: {
             type: 'Number',
-            enum: [1,2],
+            enum: [1, 2],
             default: 1,
         },
         address: {
             province: String,
             district: String,
         },
-        countryside:{ 
+        countryside: {
             province: String,
             district: String,
         },
@@ -85,7 +90,12 @@ const userSchema = new mongoose.Schema(
             },
 
         ],
-
+        blocks: [
+            {
+                type: mongoose.Types.ObjectId,
+                ref: 'User'
+            }
+        ],
         followers: [
             {
                 type: mongoose.Types.ObjectId,
@@ -100,6 +110,11 @@ const userSchema = new mongoose.Schema(
         ],
         userSettings: Object,
         saved: [{ type: mongoose.Types.ObjectId, ref: 'Post' }],
+        status: {
+            type: String,
+            enum: ['I', 'A'],
+            default: 'I',
+        },
         isAdmin: {
             type: Boolean,
             default: false
@@ -111,6 +126,6 @@ const userSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
-
+userSchema.plugin(mongoose_delete, { deletedAt: true, overrideMethods: "all" });
 
 module.exports = mongoose.model('User', userSchema);

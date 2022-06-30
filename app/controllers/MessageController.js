@@ -1,6 +1,7 @@
 const createRes = require('../../utils/response_utils');
 const Conversations = require('../modules/conversation');
 const Messages = require('../modules/message');
+const Users = require('../modules/user');
 
 class APIFeatures {
     constructor(query, queryString) {
@@ -22,12 +23,18 @@ const MessageController = {
             const { recipient, sender, text, media, call, icon } =
                 req.body;
             if (!text && media?.length === 0 && !call && !icon) return;
+            const currentRecipient = await Users.findOne({ _id: recipient._id, status: 'A', deleted: false });
+            if (!currentRecipient || currentRecipient.deleted || currentRecipient.blocks.includes(sender))
+                return next(createRes.error('Bạn không thể trả lời cuộc trò chuyện này.'))
+
             const newConversations = await Conversations.findOneAndUpdate(
                 {
                     $or: [
                         { participants: [req.body.sender, req.body.recipient] },
                         { participants: [req.body.recipient, req.body.sender] },
                     ],
+
+
                 },
                 {
                     participants: [req.body.sender, req.body.recipient],
@@ -41,7 +48,7 @@ const MessageController = {
                     new: true,
                     upsert: true,
                 }
-            ).populate('participants', '_id avatar username fullname');
+            ).populate('participants', '-password');
 
             const newMessage = new Messages({
                 conversation: newConversations._id,
@@ -95,7 +102,7 @@ const MessageController = {
                     new: true,
                 }
             )
-                .populate('participants', '_id avatar username fullname');
+                .populate('participants', '-password');
             res.json(createRes.success('Thành công!', conversation));
         } catch (error) {
             next(error);
@@ -140,7 +147,7 @@ const MessageController = {
                 {
                     new: true,
                 }
-            ).populate('participants', '_id avatar username fullname');
+            ).populate('participants', '-password');
 
             return res.json(createRes.success('Thành công!', newConversations));
         });

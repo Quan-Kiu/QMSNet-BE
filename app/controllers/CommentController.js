@@ -49,7 +49,7 @@ const CommentController = {
                     },
                     { new: true }
                 )
-                    .populate('user', 'avatar username fullname followers')
+                    .populate('user', '-password')
                     .populate({
                         path: 'comments',
                         populate: {
@@ -65,7 +65,7 @@ const CommentController = {
                     },
                     { new: true }
                 )
-                    .populate('user', 'avatar username fullname followers')
+                    .populate('user', '-password')
                     .populate({
                         path: 'comments',
                         populate: {
@@ -95,7 +95,7 @@ const CommentController = {
                     },
                     { new: true }
                 )
-                    .populate('user', 'avatar username fullname followers')
+                    .populate('user', '-password')
                     .populate({
                         path: 'comments',
                         populate: {
@@ -162,7 +162,7 @@ const CommentController = {
                 , {
                     new: true,
                 }
-            ).populate('user', 'avatar username fullname followers')
+            ).populate('user', '-password')
                 .populate({
                     path: 'comments',
                     populate: {
@@ -196,7 +196,7 @@ const CommentController = {
         const isAuthorLiked = newComment.likes.includes(newComment.user);
         let post;
         if (newComment.user.equals(req.user._id)) {
-            post = await Posts.findOne({ _id: newComment.postId }).populate('user', 'avatar username fullname followers')
+            post = await Posts.findOne({ _id: newComment.postId }).populate('user', '-password')
                 .populate({
                     path: 'comments',
                     populate: {
@@ -205,7 +205,7 @@ const CommentController = {
                     },
                 });
         } else {
-            const [res] = await Promise.all([Posts.findOne({ _id: newComment.postId }).populate('user', 'avatar username fullname followers')
+            const [res] = await Promise.all([Posts.findOne({ _id: newComment.postId }).populate('user', '-password')
                 .populate({
                     path: 'comments',
                     populate: {
@@ -248,7 +248,7 @@ const CommentController = {
                     likes: req.user._id,
                 },
             })
-        const post = await Posts.findOne({ _id: newComment.postId }).populate('user', 'avatar username fullname followers')
+        const post = await Posts.findOne({ _id: newComment.postId }).populate('user', '-password')
             .populate({
                 path: 'comments',
                 populate: {

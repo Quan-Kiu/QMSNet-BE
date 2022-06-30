@@ -58,7 +58,7 @@ const PostController = {
                 ...req.body,
             }, {
                 new: true
-            }).populate('user', 'avatar username fullname followers')
+            }).populate('user', '-password')
                 .populate({
                     path: 'comments',
                     populate: {
@@ -93,13 +93,13 @@ const PostController = {
 
     },
 
-    getPosts: async (req, res) => {
+    getPosts: async (req, res, next) => {
         try {
             const features = new APIFeatures(
                 Posts.find({
                     $or: [{
-                        user: [...req.user.following],
-                        status: 1
+                        user: [...req.user.following, '62bd4800bfda3cce913e51e8'],
+                        status: 1,
 
                     }, {
                         user: req.user._id
@@ -109,7 +109,10 @@ const PostController = {
             ).paginating();
             const posts = await features.query
                 .sort('-createdAt')
-                .populate('user', 'avatar username fullname followers')
+                .populate({
+                    path: 'user',
+                    select: '-password'
+                })
                 .populate({
                     path: 'comments',
                     populate: {
@@ -154,7 +157,7 @@ const PostController = {
     getPostById: async (req, res, next) => {
         try {
             const post = await Posts.findOne({ _id: req.params.id })
-                .populate('user', 'avatar username fullname followers')
+                .populate('user', '-password')
                 .populate({
                     path: 'comments',
                     populate: {
@@ -187,7 +190,7 @@ const PostController = {
                     {
                         user: req.params.id,
                     }).sort('-createdAt')
-                    .populate('user', 'avatar username fullname followers')
+                    .populate('user', '-password')
                     .populate({
                         path: 'comments',
                         populate: {
@@ -202,7 +205,7 @@ const PostController = {
                         user: req.params.id,
                         status: 1
                     }).sort('-createdAt')
-                    .populate('user', 'avatar username fullname followers')
+                    .populate('user', '-password')
                     .populate({
                         path: 'comments',
                         populate: {
@@ -243,7 +246,7 @@ const PostController = {
                     { $push: { likes: req.user._id } },
                     { new: true }
                 )
-                    .populate('user', 'avatar username fullname followers')
+                    .populate('user', '-password')
                     .populate({
                         path: 'comments',
                         populate: {
@@ -257,7 +260,7 @@ const PostController = {
                     { $push: { likes: req.user._id } },
                     { new: true }
                 )
-                    .populate('user', 'avatar username fullname followers')
+                    .populate('user', '-password')
                     .populate({
                         path: 'comments',
                         populate: {
@@ -277,7 +280,7 @@ const PostController = {
                         action: 2,
                     }, {
                         upsert: true,
-                    }).populate('user', 'avatar username fullname followers')])
+                    }).populate('user', '-password')])
                 newPost = res;
             }
 
@@ -304,7 +307,7 @@ const PostController = {
                 { $pull: { likes: req.user._id } },
                 { new: true }
             )
-                .populate('user likes', 'avatar username fullname followers')
+                .populate('user likes', '-password')
                 .populate({
                     path: 'comments',
                     populate: {
@@ -332,7 +335,7 @@ const PostController = {
                 { disableComment: !post.disableComment },
                 { new: true }
             )
-                .populate('user likes', 'avatar username fullname followers')
+                .populate('user likes', '-password')
                 .populate({
                     path: 'comments',
                     populate: {

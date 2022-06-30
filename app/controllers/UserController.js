@@ -37,6 +37,9 @@ const userController = {
                 $and: [
                     { username: { $regex: req.query.username } },
                     { username: { $ne: req.user.username } },
+                    { _id: { $nin: req.user.blocks } }, {
+                        status: 'A',
+                    }
                 ],
             })
                 .limit(10)
@@ -48,11 +51,16 @@ const userController = {
     },
     getUser: async (req, res, next) => {
         try {
-            const user = await Users.findById(req.params.id)
+            const user = await Users.findOne({
+                _id: req.params.id,
+                status: 'A',
+            })
                 .select('-password')
+
             if (!user)
                 return next(createRes.error('Người dùng không tồn tại'))
-
+            if (req.user.blocks.includes(user._id) || user.blocks.includes(req.user._id))
+                return next(createRes.error('Bạn không thể truy cập trang cá nhân này.'))
 
             return res.json(createRes.success('Thành công!', user));
         } catch (error) {
@@ -170,12 +178,65 @@ const userController = {
             return next(error);
         }
     },
+    block: async (req, res, next) => {
+        try {
+
+            if (req.user.blocks.includes(req.params.id))
+                next(createRes.error('Bạn đã chặn tài khoản này rồi.'))
+            await Users.findOneAndUpdate(
+                { _id: req.user._id },
+                { $push: { blocks: req.params.id } },
+            ).select('-password');
+            const [follower, following] = await Promise.all([Users.findOneAndUpdate(
+                { _id: req.params.id },
+                { $pull: { followers: req.user._id, following: req.user._id } },
+                { new: true }
+            ).select('-password'), Users.findOneAndUpdate(
+                { _id: req.user._id },
+                { $pull: { following: req.params.id, followers: req.params.id } },
+                { new: true }
+            ).select('-password')])
+
+            return res.json(createRes.success('Block thành công', following));
+        } catch (error) {
+            return next(error)
+        }
+    },
+    getBlock: async (req, res, next) => {
+        try {
+
+            const blocks = await Users.find(
+                { _id: req.user.blocks },
+            ).select('-password');
+
+            return res.json(createRes.success('Thành công', blocks));
+        } catch (error) {
+            return next(error)
+        }
+    },
+    unBlock: async (req, res, next) => {
+        try {
+            if (!(req.user.blocks.includes(req.params.id)))
+                next(createRes.error('Bạn chưa chặn tài khoản này rồi.'))
+            const newUser = await Users.findOneAndUpdate(
+                { _id: req.user._id },
+                { $pull: { blocks: req.params.id } },
+                { new: true }
+            ).select('-password');
+
+            return res.json(createRes.success('Unblock thành công', newUser));
+
+        } catch (error) {
+            return next(error);
+        }
+    },
 
     requests: async (req, res, next) => {
         try {
             const features = new APIFeatures(
                 Users.find({
                     _id: { $in: [...req.user.followers], $nin: [...req.user.following] },
+                    status: 'A'
                 }),
                 req.query
             ).paginating();
@@ -201,7 +262,7 @@ const userController = {
             const num = req.query.num || 8;
 
             const users = await Users.aggregate([
-                { $match: { _id: { $nin: newArr } } },
+                { $match: { _id: { $nin: newArr }, status: 'A' } },
                 { $sample: { size: Number(num) } },
                 {
                     $lookup: {
