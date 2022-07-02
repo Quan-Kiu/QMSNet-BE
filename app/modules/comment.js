@@ -27,6 +27,6 @@ const commentSchema = new mongoose.Schema(
     }
 );
 
-commentSchema.plugin(mongoose_delete, { deletedAt: true });
+commentSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true });
 
 module.exports = mongoose.model('Comment', commentSchema);

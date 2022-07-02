@@ -5,7 +5,7 @@ const auth = require('../middlewares/auth');
 
 router.post('/posts', auth, PostController.createPost);
 router.patch('/posts/:id', auth, PostController.updatePost);
-router.get('/posts/', auth, PostController.getPosts);
+router.post('/posts/getAll', auth, PostController.getPosts);
 router.get('/posts/:id', auth, PostController.getPostById);
 router.get('/posts/getByUser/:id', auth, PostController.getPostsByUser);
 router.get('/posts/getPostsExplore', auth, PostController.getPostsExplore);

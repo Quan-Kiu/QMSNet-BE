@@ -89,7 +89,7 @@ const PostController = {
                 await Comments.deleteMany({ _id: { $in: post.comments } });
                 return res.json(createRes.success('Xóa bài đăng thành công.', post));
 
-            })
+            }, req.user._id)
 
     },
 
@@ -97,18 +97,25 @@ const PostController = {
         try {
             const features = new APIFeatures(
                 Posts.find({
-                    $or: [{
-                        user: [...req.user.following, '62bd4800bfda3cce913e51e8'],
-                        status: 1,
+                    $or: [
+                        {
+                            user: req.body.postIds,
+                            status: 1,
 
-                    }, {
-                        user: req.user._id
-                    }]
+                        },
+                        {
+                            _id: req.body.postIds,
+                            status: 1,
+
+                        },
+                        {
+                            user: req.user._id
+                        }]
                 }),
                 req.query
             ).paginating();
             const posts = await features.query
-                .sort('-createdAt')
+                .sort(req?.query?.sort)
                 .populate({
                     path: 'user',
                     select: '-password'
@@ -366,7 +373,7 @@ const PostController = {
                     new: true
                 }
             ).select('-password')
-                .populate('saved', '');;
+                ;
             return res.json(createRes.success('Lưu bài đăng thành công', newUser));
         } catch (error) {
             return next(err);
@@ -390,7 +397,7 @@ const PostController = {
                     new: true
                 }
             ).select('-password')
-                .populate('saved', '');;
+                ;
             return res.json(createRes.success('Hủy lưu bài đăng thành công', newUser));
         } catch (error) {
             return next(err);

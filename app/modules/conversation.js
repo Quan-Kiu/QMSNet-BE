@@ -10,6 +10,9 @@ const conversationSchema = new mongoose.Schema(
         icon: { type: Boolean, default: false },
         call: Object,
         read: [mongoose.Types.ObjectId],
+        deletedBy: [
+            { type: mongoose.Types.ObjectId, ref: 'User' }
+        ]
     },
     {
         timestamps: true,

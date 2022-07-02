@@ -19,6 +19,6 @@ const messageSchema = new mongoose.Schema(
     }
 );
 
-messageSchema.plugin(mongoose_delete, { deletedAt: true });
+messageSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true });
 
 module.exports = mongoose.model('Message', messageSchema);

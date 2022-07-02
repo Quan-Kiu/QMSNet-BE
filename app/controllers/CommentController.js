@@ -150,7 +150,7 @@ const CommentController = {
 
             await Comments.deleteMany({
                 _id: { $in: comments },
-            });
+            }, req.user._id);
 
             const post = await Posts.findOneAndUpdate(
                 { _id: comments[0].postId },

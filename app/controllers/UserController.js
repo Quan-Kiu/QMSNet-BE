@@ -2,6 +2,7 @@ const Users = require('../modules/user');
 const Notifies = require('../modules/notify');
 const bcrypt = require('bcrypt');
 const createRes = require('../../utils/response_utils');
+const mongoose = require('mongoose');
 
 class APIFeatures {
     constructor(query, queryString) {
@@ -23,13 +24,24 @@ class APIFeatures {
 }
 
 const userController = {
-    getAllUser: async (req, res) => {
-        const lstUser = await Users.find({
-            username: { $ne: req.user.username },
-        }).limit(5);
-        return res.json({
-            lstUser,
-        });
+    getAll: async (req, res, next) => {
+        try {
+            const features = new APIFeatures(Users.find({
+                _id: { $in: req.body.userIds }
+            }), req.query).paginating()
+
+            const users = await features.query.select('-password');
+
+            return res.json(createRes.success('Thành công', {
+                users,
+                pagination: {
+                    ...req.query, count: users.length
+                }
+            }))
+
+        } catch (err) {
+            return next(err)
+        }
     },
     searchUser: async (req, res, next) => {
         try {
@@ -88,6 +100,12 @@ const userController = {
         try {
             const newInfo = await Users.findByIdAndUpdate(req.user._id, newValues, {
                 new: true
+            }).populate({
+                path: 'saved',
+                populate: {
+                    path: 'user',
+                    select: '-password',
+                },
             });
             return res.status(200).json(createRes.success('Chỉnh sửa thông tin cá nhân thành công!', newInfo))
         } catch (error) {
@@ -257,13 +275,12 @@ const userController = {
 
     suggestionsUser: async (req, res, next) => {
         try {
-            const newArr = [...req.user.following, ...req.user.followers, req.user._id];
 
-            const num = req.query.num || 8;
+            const newArr = [...req.user.following, ...req.user.followers, req.user._id, ...req?.body?.userIgnore].map((user) => new mongoose.Types.ObjectId(user));
 
             const users = await Users.aggregate([
                 { $match: { _id: { $nin: newArr }, status: 'A' } },
-                { $sample: { size: Number(num) } },
+                { $sample: { size: 8 } },
                 {
                     $lookup: {
                         from: 'users',
@@ -282,9 +299,13 @@ const userController = {
                 },
             ]).project('-password');
 
+            const userIgnore = users.map((user) => user._id);
+
+
             return res.json(createRes.success('Thành công!', {
                 users,
                 total: users.length,
+                userIgnore
             }));
         } catch (err) {
             return next(err);

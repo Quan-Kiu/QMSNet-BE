@@ -12,7 +12,7 @@ router.get(
 );
 router.delete('/message/:id/delete', auth, MessageController.deleteMessage);
 router.delete(
-    '/conversation/:id/delete',
+    '/conversations/:id/delete',
     auth,
     MessageController.deleteConversation
 );

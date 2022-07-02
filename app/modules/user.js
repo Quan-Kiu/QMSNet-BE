@@ -37,11 +37,11 @@ const userSchema = new mongoose.Schema(
         avatar: {
             public_id: {
                 type: String,
-                default: 'qmedia/fhphniflhpcrkm84qnlc'
+                default: 'qmedia/fnhasw8hrnzcmszpisgu'
             },
             url: {
                 type: String,
-                default: 'http://res.cloudinary.com/quankiu/image/upload/v1654968194/qmedia/fhphniflhpcrkm84qnlc.png'
+                default: 'https://res.cloudinary.com/quankiu/image/upload/v1655386021/qmedia/fnhasw8hrnzcmszpisgu.png'
             },
 
         },
@@ -113,7 +113,7 @@ const userSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ['I', 'A'],
-            default: 'I',
+            default: 'A',
         },
         isAdmin: {
             type: Boolean,
@@ -126,6 +126,6 @@ const userSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
-userSchema.plugin(mongoose_delete, { deletedAt: true, overrideMethods: "all" });
+userSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true, overrideMethods: "all" });
 
 module.exports = mongoose.model('User', userSchema);

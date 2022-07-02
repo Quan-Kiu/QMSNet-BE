@@ -12,7 +12,7 @@ const SiteController = {
         try {
             const deleted = await User.deleteOne({
                 username: req.body.username,
-            });
+            }, req.user._id);
             return res.status(200).json({ message: 'Deleted' });
         } catch (error) {
             return res.status(400).json({ message: error.message });

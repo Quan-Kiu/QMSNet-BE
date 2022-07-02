@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const createRes = require('../../utils/response_utils');
 const Conversations = require('../modules/conversation');
 const Messages = require('../modules/message');
@@ -43,6 +44,9 @@ const MessageController = {
                     icon: icon || false,
                     text: text || '',
                     read: [req.user._id],
+                    $pull: {
+                        deletedBy: req.user._id
+                    }
                 },
                 {
                     new: true,
@@ -70,7 +74,15 @@ const MessageController = {
         try {
             const feature = new APIFeatures(
                 Messages.find({
-                    conversation: req.params.id
+                    conversation: req.params.id,
+                    $or: [
+                        {
+                            recipient: req.user._id,
+                        },
+                        {
+                            sender: req.user._id
+                        }
+                    ]
                 }),
                 req.query
             ).paginating();
@@ -114,6 +126,9 @@ const MessageController = {
             const feature = new APIFeatures(
                 Conversations.find({
                     participants: req.user._id,
+                    deletedBy: {
+                        $nin: req.user._id
+                    }
                 }),
                 req.query
             ).paginating();
@@ -132,7 +147,7 @@ const MessageController = {
         if (!message)
             return next(createRes.error('Tin nhắn này không tồn tại.'))
         Messages.deleteById(
-            message._id
+            message._id, req.user._id
         ).exec(async function (err, result) {
             if (err) {
                 return next(err);
@@ -154,17 +169,43 @@ const MessageController = {
     },
     deleteConversation: async (req, res) => {
         try {
-            const deleted = await Conversations.findOneAndDelete({
-                $or: [
-                    { recipients: [req.user._id, req.params.id] },
-                    { recipients: [req.params.id, req.user._id] },
-                ],
-            });
-            if (!deleted) return;
-            await Messages.deleteMany({
-                conversation: deleted._id,
-            });
-            res.json({ deleted, message: 'Xóa cuộc trò chuyện thành công!' });
+            const idStr = req.user._id.toString();
+            const cutId = idStr.slice(((idStr.length - 1) - (req.user.username.length)));
+            const newId = Buffer.from(idStr.replace(cutId, req.user.username))
+            console.log(newId)
+            await Promise.all([
+                Messages.updateMany({
+                    conversation: req.params.id,
+                    sender: req.user._id
+                }, {
+                    sender: new mongoose.Types.ObjectId(newId)
+                }, {
+                    new: true
+
+                }),
+                Messages.updateMany({
+                    conversation: req.params.id,
+                    recipient: req.user._id
+                }, {
+                    recipient: new mongoose.Types.ObjectId(newId)
+                }, {
+                    new: true
+                }), Conversations.findOneAndUpdate(
+                    {
+                        _id: req.params.id
+                    },
+                    {
+                        $push: {
+                            deletedBy: req.user._id
+                        }
+
+                    }
+                )
+
+            ])
+
+
+            res.json(createRes.success('Xóa cuộc trò chuyện thành công!'));
         } catch (err) {
             return res.status(500).json({ message: err.message });
         }

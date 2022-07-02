@@ -277,7 +277,7 @@ const AuthController = {
                         return next(createRes.error('Vui lòng đăng nhập lại.'))
                     const user = await Users.findById(result.id)
                         .select('-password')
-                        .populate('saved', '');
+
 
                     if (!user)
                         return next(createRes.error('Tài khoản không tồn tại.'))
