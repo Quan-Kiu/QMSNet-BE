@@ -11,7 +11,7 @@ const { ExpressPeerServer } = require('peer');
 
 // Middleware
 app.use(express.json());
-app.use(cors({ credentials: true, origin: ["http://localhost:3000", "http://localhost:5000", "http://192.168.1.5:3000", "http://192.168.1.5:5000"] }));
+app.use(cors({ credentials: true, origin: ["http://localhost:3000", "http://localhost:5000", "http://192.168.1.5:3000", "http://192.168.1.5:5000", "http://192.168.1.5:3001"] }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -22,7 +22,7 @@ const http = require('http').Server(app);
 
 const io = require('socket.io')(http, {
     cors: {
-        origin: ["http://localhost:3000", "http://localhost:5000", "http://192.168.1.5:3000", "http://192.168.1.5:5000"],
+        origin: ["http://localhost:3000", "http://localhost:5000", "http://192.168.1.5:3000", "http://192.168.1.5:5000", "http://192.168.1.5:3001"],
         methods: ["GET", "POST"]
     }
 });

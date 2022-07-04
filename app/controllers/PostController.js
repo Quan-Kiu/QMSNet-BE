@@ -190,7 +190,6 @@ const PostController = {
 
     getPostsByUser: async (req, res) => {
         try {
-            req.query.limit = 10;
             let data;
             if (req.user._id.toString() === req.params.id) {
                 data = await Posts.find(
@@ -222,14 +221,17 @@ const PostController = {
                     });
             }
 
-
-            const total = data.length;
-
             const feature = new APIFeatures(data, req.query).paginating(true);
 
             const posts = feature.query;
 
-            return res.json(createRes.success('Thành công', { posts, total }));
+            return res.json(createRes.success('Thành công', {
+                posts, pagination: {
+                    page: req?.query?.page,
+                    limit: req?.query?.limit,
+                    count: posts.length,
+                }
+            }));
         } catch (error) {
             return res.status(500).json({ message: error.message });
         }
