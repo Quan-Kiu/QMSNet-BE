@@ -4,6 +4,7 @@ const postRoute = require('./post');
 const commentRoute = require('./comment');
 const notifyRoute = require('./notify');
 const messageRoute = require('./message');
+const reportTypeRoute = require('./reportType');
 
 function routes(app) {
     app.use('/api', authRoute);
@@ -12,6 +13,7 @@ function routes(app) {
     app.use('/api', commentRoute);
     app.use('/api', notifyRoute);
     app.use('/api', messageRoute);
+    app.use('/api', reportTypeRoute);
 }
 
 module.exports = routes;
