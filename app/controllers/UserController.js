@@ -62,9 +62,10 @@ const userController = {
         }
     },
     getUser: async (req, res, next) => {
+        const filter = mongoose.isValidObjectId(req.params.id) ? '_id' : 'username';
         try {
             const user = await Users.findOne({
-                _id: req.params.id,
+                [filter]: req.params.id,
                 status: 'A',
             })
                 .select('-password')

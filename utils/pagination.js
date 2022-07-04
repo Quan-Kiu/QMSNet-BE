@@ -1,18 +1,19 @@
-modules.exports = class APIFeatures {
+module.exports = class APIFeatures {
     constructor(query, queryString) {
         this.query = query;
+        this.total = query.length;
+        this.count = 0;
         this.queryString = queryString;
     }
 
-    paginating(isData) {
-        const page = this.queryString.page * 1 || 1;
-        const limit = this.queryString.limit * 1 || 20;
+    paginating() {
+        const page = this.queryString.page * 1 || 0;
+        const limit = this.queryString.limit * 1 || 0;
         const skip = (page - 1) * limit;
-        if (isData) {
+        if (limit !== 0) {
             this.query = this.query.splice(skip, limit);
-        } else {
-            this.query = this.query.skip(skip).limit(limit);
         }
+        this.count = this.query.length;
         return this;
     }
 }

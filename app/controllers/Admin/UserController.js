@@ -1,7 +1,8 @@
 const createRes = require('../../../utils/response_utils');
 
 const Users = require('../../modules/user')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+const { getFilter } = require('../../../utils/request_utils');
 
 
 class APIFeatures {
@@ -29,25 +30,7 @@ const UserController = {
     getAll: async (req, res, next) => {
 
         try {
-            const filter = req?.body?.filter?.reduce((prev, next) => {
-                if (next.operator === 'LIKE') {
-
-                    return {
-                        ...prev,
-                        [next.type]: {
-                            $regex: next.name,
-                            $options: 'i'
-                        }
-                    }
-                } else if (next.operator === 'EQUAL') {
-
-                    return {
-                        ...prev,
-                        [next.type]: next.name
-                    }
-                }
-
-            }, {})
+            const filter = getFilter(req);
 
             const features = new APIFeatures(await Users.findWithDeleted(filter).sort('-createdAt').select('-password'), req.body).paginating();
 

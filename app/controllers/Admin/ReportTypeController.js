@@ -1,14 +1,26 @@
-const createRes = require('../../utils/response_utils');
-const ReportType = require('../modules/ReportType')
+const { getFilter } = require('../../../utils/request_utils');
+const createRes = require('../../../utils/response_utils');
+const ReportType = require('../../modules/ReportType')
+const APIFeatures = require('../../../utils/pagination')
 
 
 const ReportTypeController = {
     getAll: async (req, res, next) => {
         try {
 
-            const reports = await ReportType.find(req.body)
+            const filter = getFilter(req);
 
-            return res.json(createRes.success('Thành công', reports))
+            const features = new APIFeatures(await ReportType.find(filter), req.body).paginating();
+
+            return res.json(createRes.success('Thành công!', {
+                rows: features.query,
+                total: features.total,
+                pagination: {
+                    page: req?.body?.page,
+                    limit: req?.body?.limit,
+                    count: features.count
+                }
+            }))
 
         } catch (error) {
             return next(error);
@@ -16,18 +28,11 @@ const ReportTypeController = {
     },
     new: async (req, res, next) => {
         try {
-            const { datas } = req.body;
-            console.log(datas)
+            const data = req.body;
 
+            const report = new ReportType(data);
 
-            datas.forEach(async function (record) {
-
-                const report = new ReportType(record);
-
-                await report.save();
-
-            });
-
+            await report.save();
 
             return res.json(createRes.success('Thành công'))
 
@@ -40,7 +45,7 @@ const ReportTypeController = {
             const data = req.body;
             const id = req.params.id;
 
-            const report = await ReportType.findAndUpdateWithDeleted({
+            const report = await ReportType.findOneAndUpdate({
                 _id: id
             }, data, {
                 new: true
@@ -57,7 +62,7 @@ const ReportTypeController = {
         try {
             const id = req.params.id;
 
-            const report = await ReportType.delete({
+            const report = await ReportType.findOneAndDelete({
                 _id: id
             });
 

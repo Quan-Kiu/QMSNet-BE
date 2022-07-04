@@ -6,12 +6,7 @@ const ReportTypeSchema = mongoose.Schema({
         enum: ['C', 'A']
     },
     name: String,
-    key: {
-        type: String,
-        unique: true
-    },
 })
 
 
-
-module.exports = mongoose.model('Report', ReportTypeSchema)
+module.exports = mongoose.model('ReportType', ReportTypeSchema)
