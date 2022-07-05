@@ -96,22 +96,25 @@ const PostController = {
     getPosts: async (req, res, next) => {
         try {
             const features = new APIFeatures(
-                Posts.find({
-                    $or: [
-                        {
-                            user: req.body.postIds,
-                            status: 1,
+                Posts.find(
 
-                        },
-                        {
-                            _id: req.body.postIds,
-                            status: 1,
+                    {
+                        $or: [
+                            {
+                                user: req.body.postIds,
+                                status: 1,
 
-                        },
-                        {
-                            user: req.user._id
-                        }]
-                }),
+                            },
+                            {
+                                _id: req.body.postIds,
+                                status: 1,
+
+                            },
+                            {
+                                user: req.user._id
+                            }],
+
+                    }),
                 req.query
             ).paginating();
             const posts = await features.query
@@ -129,11 +132,12 @@ const PostController = {
 
 
                 });
+            const resPost = posts.filter((p) => p.user.status === 'A');
             return res.json(createRes.success('Thành công', {
-                posts, pagination: {
+                posts: resPost, pagination: {
                     page: req?.query?.page,
                     limit: req?.query?.limit,
-                    count: posts.length,
+                    count: resPost.length,
                 }
             }));
         } catch (error) {
@@ -408,18 +412,39 @@ const PostController = {
 
     getPostSavedByUser: async (req, res, next) => {
         try {
-            const user = await Users.findOne({ _id: req.params.id });
-            if (!user)
-                return next(createRes.error('Người dùng không tồn tại.'))
+            const features = new APIFeatures(
+                Posts.find(
+                    {
+                        _id: req.body.postIds,
+                    }
+                ),
+                req.query
+            ).paginating();
+            const posts = await features.query
+                .sort(req?.query?.sort)
+                .populate({
+                    path: 'user',
+                    select: '-password'
+                })
+                .populate({
+                    path: 'comments',
+                    populate: {
+                        path: 'user',
+                        select: '-password',
+                    },
 
-            const posts = await Posts.find({
-                _id: {
-                    $in: user.saved,
-                },
-            });
-            return res.json(createRes.error('Thành công', posts));
+
+                });
+            const resPost = posts.filter((p) => p.user.status === 'A');
+            return res.json(createRes.success('Thành công', {
+                posts: resPost, pagination: {
+                    page: req?.query?.page,
+                    limit: req?.query?.limit,
+                    count: resPost.length,
+                }
+            }));
         } catch (error) {
-            next(error)
+            return next(error);
         }
     },
 };

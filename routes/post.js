@@ -9,8 +9,8 @@ router.post('/posts/getAll', auth, PostController.getPosts);
 router.get('/posts/:id', auth, PostController.getPostById);
 router.post('/posts/getByUser/:id', auth, PostController.getPostsByUser);
 router.get('/posts/getPostsExplore', auth, PostController.getPostsExplore);
-router.get(
-    '/posts/getSavedByUser/:id',
+router.post(
+    '/posts/getSavedByUser',
     auth,
     PostController.getPostSavedByUser
 );

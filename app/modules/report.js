@@ -3,7 +3,7 @@ const ReportType = require('./ReportType');
 const mongoose_delete = require('mongoose-delete');
 
 const ReportSchema = mongoose.Schema({
-    type: Object,
+    reportType: Object,
     description: String,
     user: { type: mongoose.Types.ObjectId, ref: 'User' },
     post: { type: mongoose.Types.ObjectId, ref: 'Post' },
@@ -14,17 +14,27 @@ const ReportSchema = mongoose.Schema({
         enum: [
             'P',
             'I',
-            'R'
+            'R',
+            'N'
         ],
         default: 'P'
     },
+    result: {
+        type: String,
+        enum: [
+            'W',
+            'D',
+            'B'
+        ]
+    },
+    resultNote: String,
     solvedBy: { type: mongoose.Types.ObjectId, ref: 'User' },
 
 }, {
     timestamps: true
 })
 
-ReportSchema.plugin(mongoose_delete, { deletedAt: true });
+ReportSchema.plugin(mongoose_delete, { deletedAt: true, overrideMethods: true });
 
 
 

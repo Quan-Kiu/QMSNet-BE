@@ -10,6 +10,7 @@ const notifySchema = new mongoose.Schema(
         commentId: mongoose.Types.ObjectId,
         replyId: mongoose.Types.ObjectId,
         content: String,
+        reportId: mongoose.Types.ObjectId,
         action: {
             type: Number,
             required: true

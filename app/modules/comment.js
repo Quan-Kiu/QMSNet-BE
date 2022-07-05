@@ -20,7 +20,6 @@ const commentSchema = new mongoose.Schema(
         reply: mongoose.Types.ObjectId,
         user: { type: mongoose.Types.ObjectId, ref: 'User' },
         postId: mongoose.Types.ObjectId,
-        postUserId: mongoose.Types.ObjectId,
     },
     {
         timestamps: true,

@@ -29,7 +29,14 @@ const NotifyController = {
 
     getNotifies: async (req, res, next) => {
         try {
-            const notifies = await Notifies.find({ recipients: req.user._id })
+            const notifies = await Notifies.find({
+                recipients: req.user._id,
+                photos: {
+                    $elemMatch: {
+                        status: 'A', deleted: false
+                    }
+                }
+            })
                 .sort('-updatedAt')
                 .populate('user', 'avatar username')
                 .limit(40);

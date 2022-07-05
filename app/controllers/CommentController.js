@@ -35,7 +35,6 @@ const CommentController = {
                 content: comment.content,
                 user: req.user._id,
                 postId: post._id,
-                postUserId: post.user._id,
                 tag: comment?.tag,
                 reply: comment?.reply,
             });

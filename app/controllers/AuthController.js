@@ -218,6 +218,12 @@ const AuthController = {
                 ));
 
             if (user.status !== 'A') {
+                if (user.status === 'B') {
+
+                    return next(createRes.error(
+                        'Tài khoản của bạn đã bị khóa, vui lòng liên hệ quankiugl@gmail.com để biết thêm chi tiết.',
+                    ));
+                }
                 return next(createRes.error(
                     'Tài khoản chưa được kích hoạt, vui lòng kích hoạt tài khoản của bạn.', 403, { email: user.email },
                 ));
