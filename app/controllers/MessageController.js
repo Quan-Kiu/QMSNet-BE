@@ -115,6 +115,9 @@ const MessageController = {
                 }
             )
                 .populate('participants', '-password');
+
+
+
             res.json(createRes.success('Thành công!', conversation));
         } catch (error) {
             next(error);
@@ -132,6 +135,7 @@ const MessageController = {
                 }),
                 req.query
             ).paginating();
+
             const conversations = await feature.query
                 .sort('-updatedAt')
                 .populate('participants', '-password');

@@ -31,15 +31,19 @@ const NotifyController = {
         try {
             const notifies = await Notifies.find({
                 recipients: req.user._id,
-                photos: {
-                    $elemMatch: {
-                        status: 'A', deleted: false
-                    }
-                }
+
             })
                 .sort('-updatedAt')
-                .populate('user', 'avatar username')
+                .populate({
+                    path: 'user', match: {
+                        deleted: false,
+                        status: 'A'
+                    }, select: 'avatar username deleted status'
+                })
                 .limit(40);
+
+
+            // const notifies = data.filter((n) => !n?.user?.deleted && n?.user?.status === 'A')
 
             return res.json(createRes.success('Success', notifies));
         } catch (err) {

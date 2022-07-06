@@ -10,7 +10,6 @@ const messageSchema = new mongoose.Schema(
         media: {
             type: { url: String, public_id: String }
         },
-        call: Object,
         icon: { type: Boolean, default: false },
 
     },

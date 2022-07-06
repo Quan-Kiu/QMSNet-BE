@@ -51,8 +51,12 @@ const userController = {
                     { username: { $ne: req.user.username } },
                     { _id: { $nin: req.user.blocks } }, {
                         status: 'A',
-                    }
+                        deleted: false,
+                    },
                 ],
+                blocks: {
+                    $ne: req.user._id
+                }
             })
                 .limit(10)
                 .select('username avatar fullname');
@@ -67,13 +71,14 @@ const userController = {
             const user = await Users.findOne({
                 [filter]: req.params.id,
                 status: 'A',
+                deleted: false,
             })
                 .select('-password')
 
             if (!user)
-                return next(createRes.error('Người dùng không tồn tại'))
+                return next(createRes.error('Không thể truy cập trang cá nhân này'))
             if (req.user.blocks.includes(user._id) || user.blocks.includes(req.user._id))
-                return next(createRes.error('Bạn không thể truy cập trang cá nhân này.'))
+                return next(createRes.error('Không thể truy cập trang cá nhân này.'))
 
             return res.json(createRes.success('Thành công!', user));
         } catch (error) {
@@ -255,7 +260,8 @@ const userController = {
             const features = new APIFeatures(
                 Users.find({
                     _id: { $in: [...req.user.followers], $nin: [...req.user.following] },
-                    status: 'A'
+                    status: 'A',
+                    deleted: false
                 }),
                 req.query
             ).paginating();
@@ -280,7 +286,13 @@ const userController = {
             const newArr = [...req.user.following, ...req.user.followers, req.user._id, ...req?.body?.userIgnore].map((user) => new mongoose.Types.ObjectId(user));
 
             const users = await Users.aggregate([
-                { $match: { _id: { $nin: newArr }, status: 'A' } },
+                {
+                    $match: {
+                        _id: { $nin: newArr }, status: 'A', deleted: false, blocks: {
+                            $ne: req.user._id
+                        }
+                    }
+                },
                 { $sample: { size: 8 } },
                 {
                     $lookup: {

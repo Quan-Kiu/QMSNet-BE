@@ -126,6 +126,6 @@ const userSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
-userSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true, overrideMethods: true });
+userSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true });
 
 module.exports = mongoose.model('User', userSchema);

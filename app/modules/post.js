@@ -28,7 +28,7 @@ const postSchema = new mongoose.Schema(
     }
 );
 
-postSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true, overrideMethods: "all" });
+postSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true });
 
 
 module.exports = mongoose.model('Post', postSchema);

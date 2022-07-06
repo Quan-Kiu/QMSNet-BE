@@ -12,11 +12,11 @@ const ReportController = {
             const filter = getFilter(req);
 
 
-            const features = new APIFeatures(await Report.findWithDeleted(filter).populate(
+            const features = new APIFeatures(await Report.find(filter).populate(
 
                 'user', '-password',
 
-            ).populate('post').populate('comment'), req.body).paginating();
+            ).populate('post').populate('comment').sort('-createdAt'), req.body).paginating();
 
             return res.json(createRes.success('Thành công!', {
                 rows: features.query,

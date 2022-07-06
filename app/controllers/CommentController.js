@@ -7,7 +7,7 @@ const CommentController = {
     createComment: async (req, res, next) => {
         try {
             const comment = req.body;
-            const post = await Posts.findOne({ _id: comment.postId, disableComment: false }).populate({
+            const post = await Posts.findOne({ _id: comment.postId, disableComment: false, deleted: false }).populate({
                 path: 'comments',
                 populate: {
                     path: 'user',
@@ -127,7 +127,6 @@ const CommentController = {
     deleteComment: async (req, res, next) => {
         try {
             const comment = await Comments.findOne({
-
                 _id: req.params.id,
             });
             if (!comment)
@@ -258,6 +257,24 @@ const CommentController = {
         return res.status(200).json(createRes.success('Thành công', { post, comment: newComment }));
 
     },
+    getComment: async (req, res, next) => {
+        try {
+            const data = await Comments.find({
+                postId: req.param.id
+            }).populate({
+                path: 'user',
+                select: '-password',
+            })
+
+            const comments = data.filter((c) => !c.user.blocks.includes(req.user._id) && !req.user.blocks.includes(c.user._id))
+
+            return res.status(200).json(createRes.success('Thành công', { comments }));
+
+
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
 };
 
 module.exports = CommentController;

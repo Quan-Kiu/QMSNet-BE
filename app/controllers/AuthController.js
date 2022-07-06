@@ -153,7 +153,7 @@ const AuthController = {
                     return res.status(200).json(createRes.success('Xác nhận tài khoản thành công, vui lòng đăng nhập.'
                     ));
                 } else {
-                    return next(createRes.error('Kích hoạt tài khoản không thành công.'))
+                    return next(createRes.error('Kích hoạt tài khoản không thành công. Liên hệ quankiugl@gmail.com để được hỗ trợ.'))
                 }
 
             }
@@ -221,7 +221,7 @@ const AuthController = {
                 if (user.status === 'B') {
 
                     return next(createRes.error(
-                        'Tài khoản của bạn đã bị khóa, vui lòng liên hệ quankiugl@gmail.com để biết thêm chi tiết.',
+                        'Tài khoản của bạn đã bị khóa, vui lòng liên hệ quankiugl@gmail.com để được hỗ trợ.',
                     ));
                 }
                 return next(createRes.error(

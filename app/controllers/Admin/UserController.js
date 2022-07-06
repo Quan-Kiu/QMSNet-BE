@@ -32,7 +32,7 @@ const UserController = {
         try {
             const filter = getFilter(req);
 
-            const features = new APIFeatures(await Users.findWithDeleted(filter).sort('-createdAt').select('-password'), req.body).paginating();
+            const features = new APIFeatures(await Users.find(filter).sort('-createdAt').select('-password'), req.body).paginating();
 
             return res.json(createRes.success('Thành công!', {
                 rows: features.query,
@@ -52,7 +52,7 @@ const UserController = {
 
 
         try {
-            const newInfo = await Users.findOneAndUpdateWithDeleted({ _id: req.params.id }, newValues, { new: true });
+            const newInfo = await Users.findOneAndUpdate({ _id: req.params.id }, newValues, { new: true });
             return res.status(200).json(createRes.success('Chỉnh sửa thông tin  thành công!', newInfo))
         } catch (error) {
             return next(error)

@@ -97,8 +97,8 @@ const PostController = {
         try {
             const features = new APIFeatures(
                 Posts.find(
-
                     {
+                        deleted: false,
                         $or: [
                             {
                                 user: req.body.postIds,
@@ -121,18 +121,22 @@ const PostController = {
                 .sort(req?.query?.sort)
                 .populate({
                     path: 'user',
-                    select: '-password'
+                    select: '-password',
+
                 })
                 .populate({
                     path: 'comments',
                     populate: {
+                        match: {
+                            status: 'A'
+                        },
                         path: 'user',
                         select: '-password',
                     },
 
 
                 });
-            const resPost = posts.filter((p) => p.user.status === 'A');
+            const resPost = posts.filter((p) => !p?.user?.deleted && p?.user?.status === 'A');
             return res.json(createRes.success('Thành công', {
                 posts: resPost, pagination: {
                     page: req?.query?.page,
@@ -167,11 +171,17 @@ const PostController = {
 
     getPostById: async (req, res, next) => {
         try {
-            const post = await Posts.findOne({ _id: req.params.id })
+            const post = await Posts.findOne({ _id: req.params.id, deleted: false })
                 .populate('user', '-password')
                 .populate({
                     path: 'comments',
                     populate: {
+                        match: {
+                            status: 'A',
+                            block: {
+                                $nin: req.user._id
+                            }
+                        },
                         path: 'user',
                         select: '-password',
                     },
@@ -199,6 +209,8 @@ const PostController = {
                 data = await Posts.find(
                     {
                         user: req.params.id,
+                        deleted: false,
+
                     }).sort('-createdAt')
                     .populate('user', '-password')
                     .populate({
@@ -245,7 +257,10 @@ const PostController = {
         try {
             const post = await Posts.findOne({
                 _id: req.params.id,
-                status: 1
+                status: 1,
+                deleted: false,
+
+
             });
             if (!post)
                 return next(createRes.error('Không tồn tại bài đăng này, hoặc bài viết đang ở chế độ riêng tư không thể tương tác.'))
@@ -269,7 +284,7 @@ const PostController = {
                     })
             } else {
                 const [res] = await Promise.all([Posts.findOneAndUpdate(
-                    { _id: req.params.id },
+                    { _id: req.params.id, deleted: false },
                     { $push: { likes: req.user._id } },
                     { new: true }
                 )
@@ -307,7 +322,8 @@ const PostController = {
         try {
             const post = await Posts.findOne({
                 _id: req.params.id,
-                status: 1
+                status: 1,
+                deleted: false,
 
             });
             if (!post)
@@ -338,6 +354,7 @@ const PostController = {
         try {
             const post = await Posts.findOne({
                 _id: req.params.id,
+                deleted: false,
 
             });
             if (!post)
@@ -371,7 +388,7 @@ const PostController = {
             if (user)
                 return next(createRes.error('Bạn đã lưu bài đăng này rồi.'))
             const newUser = await Users.findOneAndUpdate(
-                { _id: req.user._id },
+                { _id: req.user._id, deleted: false },
                 {
                     $push: { saved: req.params.id },
                 }
@@ -416,6 +433,7 @@ const PostController = {
                 Posts.find(
                     {
                         _id: req.body.postIds,
+                        deleted: false
                     }
                 ),
                 req.query
