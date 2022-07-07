@@ -12,11 +12,17 @@ const ReportController = {
             const filter = getFilter(req);
 
 
-            const features = new APIFeatures(await Report.find(filter).populate(
+            let features = new APIFeatures(await Report.find(filter).populate(
 
                 'user', '-password',
 
             ).populate('post').populate('comment').sort('-createdAt'), req.body).paginating();
+
+            if (filter?.username) {
+                let re = new RegExp(filter.username['$regex'], 'i');
+                features.query = features.query.filter((r) => r.user.username.match(re))
+                features.count = features.query.length;
+            }
 
             return res.json(createRes.success('Thành công!', {
                 rows: features.query,

@@ -7,7 +7,6 @@ const cors = require('cors');
 const socketSever = require('./socketSever');
 const port = process.env.PORT || 5000;
 const app = express();
-const { ExpressPeerServer } = require('peer');
 
 // Middleware
 app.use(express.json());

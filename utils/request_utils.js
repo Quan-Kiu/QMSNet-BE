@@ -35,6 +35,14 @@ const getFilter = (req) => req?.body?.filter?.reduce((prev, next) => {
             ...prev,
             [next.type]: next.name
         }
+    } else if (next.operator === 'IN') {
+        return {
+            ...prev,
+            [next.type]: {
+                $gte: new Date(next.name?.start),
+                $lt: next.name?.end ? new Date(next.name?.end) : new Date()
+            }
+        }
     }
 
 

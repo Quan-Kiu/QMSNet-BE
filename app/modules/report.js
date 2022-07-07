@@ -34,7 +34,7 @@ const ReportSchema = mongoose.Schema({
     timestamps: true
 })
 
-ReportSchema.plugin(mongoose_delete, { deletedAt: true, overrideMethods: true });
+ReportSchema.plugin(mongoose_delete, { deletedAt: true });
 
 
 

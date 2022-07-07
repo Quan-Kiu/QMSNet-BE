@@ -1,16 +1,26 @@
 const createRes = require('../../../utils/response_utils');
 const { getFilter } = require('../../../utils/request_utils');
-const Post = require('../../modules/post')
-const APIFeatures = require('../../../utils/pagination')
+const Posts = require('../../modules/post')
+const APIFeatures = require('../../../utils/pagination');
+const mongoose = require('mongoose');
 
 const PostController = {
     getAll: async (req, res, next) => {
         try {
             const filter = getFilter(req);
 
-            const features = new APIFeatures(await Post.find(filter).populate(
+
+
+            const features = new APIFeatures(await Posts.find(filter).populate(
                 'user', '-password',
             ).sort('-createdAt'), req.body).paginating();
+
+            if (filter?.username) {
+                let re = new RegExp(filter.username['$regex'], 'i');
+                features.query = features.query.filter((r) => r.user.username.match(re))
+                features.count = features.query.length;
+            }
+
 
             return res.json(createRes.success('Thành công!', {
                 rows: features.query,
@@ -30,11 +40,11 @@ const PostController = {
         try {
             const id = req.params.id;
 
-            const Post = await Post.delete({
+            const post = await Posts.delete({
                 _id: id
             });
 
-            return res.json(createRes.success('Xóa loại báo cáo thành công', Post))
+            return res.json(createRes.success('Xóa bài viết thành công', post))
 
         } catch (error) {
             return next(error);

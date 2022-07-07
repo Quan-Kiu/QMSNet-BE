@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const mongoose_delete = require('mongoose-delete');
 
 
+
 const postSchema = new mongoose.Schema(
     {
         content: String,
@@ -24,11 +25,15 @@ const postSchema = new mongoose.Schema(
     },
 
     {
-        timestamps: true,
+        timestamps: true
     }
 );
 
 postSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true });
 
 
-module.exports = mongoose.model('Post', postSchema);
+const postModel = mongoose.model('Post', postSchema);
+
+module.exports = postModel
+
+
