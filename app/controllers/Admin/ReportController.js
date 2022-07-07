@@ -11,7 +11,6 @@ const ReportController = {
         try {
             const filter = getFilter(req);
 
-
             let features = new APIFeatures(await Report.find(filter).populate(
 
                 'user', '-password',

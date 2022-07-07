@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const ReportType = require('./ReportType');
 const mongoose_delete = require('mongoose-delete');
 
 const ReportSchema = mongoose.Schema({
