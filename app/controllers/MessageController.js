@@ -150,6 +150,7 @@ const MessageController = {
         const message = await Messages.findOne({ _id: req.params.id });
         if (!message)
             return next(createRes.error('Tin nhắn này không tồn tại.'))
+
         Messages.deleteById(
             message._id, req.user._id
         ).exec(async function (err, result) {

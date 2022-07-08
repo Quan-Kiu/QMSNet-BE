@@ -39,10 +39,11 @@ const PostController = {
     delete: async (req, res, next) => {
         try {
             const id = req.params.id;
+            const userId = req.user._id;
 
             const post = await Posts.delete({
                 _id: id
-            });
+            }, userId);
 
             return res.json(createRes.success('Xóa bài viết thành công', post))
 

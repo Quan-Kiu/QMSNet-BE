@@ -80,10 +80,11 @@ const PostController = {
 
     deletePost: async (req, res, next) => {
         const post = await Posts.findOne({ _id: req.params.id });
+        const userId = req.user._id;
         if (!post)
             return next(createRes.error('Bài viết này không tồn tại'))
-        Posts.deleteById(
-            req.params.id).exec(async function (err, result) {
+        Posts.delete(
+            { id: req.params.id }, userId).exec(async function (err, result) {
                 if (err)
                     return next(err)
                 await Comments.deleteMany({ _id: { $in: post.comments } });

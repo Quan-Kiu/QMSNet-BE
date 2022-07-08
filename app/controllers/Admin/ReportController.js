@@ -152,11 +152,12 @@ const ReportController = {
     },
     delete: async (req, res, next) => {
         try {
+            const userId = req.user._id;
             const id = req.params.id;
 
             const report = await Report.delete({
                 _id: id
-            });
+            }, userId);
 
             return res.json(createRes.success('Xóa loại báo cáo thành công', report))
 

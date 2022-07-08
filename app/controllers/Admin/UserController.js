@@ -120,8 +120,9 @@ const UserController = {
     },
     delete: async (req, res, next) => {
         try {
-            await Users.delete({ _id: req.params.id });
-            return res.status(200).json(createRes.success('Chỉnh sửa thông tin  thành công!'))
+            const userId = req.user._id;
+            await Users.delete({ _id: req.params.id }, userId);
+            return res.status(200).json(createRes.success('Xóa người dùng thành công!'))
         } catch (error) {
             return next(error)
         }

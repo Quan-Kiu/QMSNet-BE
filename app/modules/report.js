@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const mongoose_delete = require('mongoose-delete');
+const { ReportTypeSchemma } = require('./ReportType');
 
 const ReportSchema = mongoose.Schema({
-    reportType: Object,
+    reportType: ReportTypeSchemma,
     description: String,
     user: { type: mongoose.Types.ObjectId, ref: 'User' },
     post: { type: mongoose.Types.ObjectId, ref: 'Post' },
@@ -33,7 +34,7 @@ const ReportSchema = mongoose.Schema({
     timestamps: true
 })
 
-ReportSchema.plugin(mongoose_delete, { deletedAt: true });
+ReportSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true });
 
 
 

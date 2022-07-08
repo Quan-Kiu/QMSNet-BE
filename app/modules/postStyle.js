@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const mongoose_delete = require('mongoose-delete');
 const postStyleSchema = new mongoose.Schema(
     {
         background: {
@@ -11,4 +11,7 @@ const postStyleSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model('PostStyle', postStyleSchema);
+postStyleSchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true });
+
+module.exports.PostStyles = mongoose.model('PostStyle', postStyleSchema);
+module.exports.PostStyleSchemma = postStyleSchema;

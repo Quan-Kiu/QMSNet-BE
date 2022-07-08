@@ -1,10 +1,10 @@
 const { getFilter } = require('../../../utils/request_utils');
 const createRes = require('../../../utils/response_utils');
-const { ReportTypes } = require('../../modules/ReportType')
+const { PostStyles } = require('../../modules/PostStyle')
 const APIFeatures = require('../../../utils/pagination')
 
 
-const ReportTypeController = {
+const PostStyleController = {
     getAll: async (req, res, next) => {
         try {
 
@@ -15,10 +15,7 @@ const ReportTypeController = {
                 hasDeletedFilter = true;
             }
 
-            console.log(filter)
-            console.log(hasDeletedFilter)
-
-            const features = new APIFeatures(await ReportTypes.find(filter), req.body).paginating();
+            const features = new APIFeatures(await PostStyles.find(filter), req.body).paginating();
 
             if (hasDeletedFilter) {
                 features.query = features.query.filter((r) => !r.deleted)
@@ -43,7 +40,7 @@ const ReportTypeController = {
         try {
             const data = req.body;
 
-            const report = new ReportTypes(data);
+            const report = new PostStyles(data);
 
             await report.save();
 
@@ -58,7 +55,7 @@ const ReportTypeController = {
             const data = req.body;
             const id = req.params.id;
 
-            const report = await ReportTypes.findOneAndUpdate({
+            const report = await PostStyles.findOneAndUpdate({
                 _id: id
             }, data, {
                 new: true
@@ -76,7 +73,7 @@ const ReportTypeController = {
             const userId = req.user._id;
             const id = req.params.id;
 
-            const report = await ReportTypes.delete({
+            const report = await PostStyles.delete({
                 _id: id
             }, userId);
 
@@ -89,4 +86,4 @@ const ReportTypeController = {
 
 }
 
-module.exports = ReportTypeController;
+module.exports = PostStyleController;
