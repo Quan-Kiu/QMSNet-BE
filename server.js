@@ -17,7 +17,7 @@ app.use(cookieParser());
 // Connect DB
 db.connect();
 
-const http = require('http').Server(app);
+const http = require('https').Server(app);
 
 const io = require('socket.io')(http, {
     cors: {

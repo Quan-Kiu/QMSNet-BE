@@ -64,7 +64,7 @@ const AuthController = {
                 <p>Chào bạn nha!....</p>
                 <p>Chào mừng bạn đến với QMNets</p>
                 <p>Bạn vui lòng nhấn vào nut màu đỏ ở dưới đây để xác minh tài khoản của mình trước khi tham gia vào với chúng tôi nhé.</p>
-                <a style="padding:10px 20px;background-color:#ea1e30;text-decoration:none;color:#fffffe;border-radius:5px;display:inline-block;max-width:70%;font-size:16px;margin:10px 0" href="http://${process.env.CLIENT_SERVER_HTTPS}/verify/${token}">Xác nhận tài khoản</a>
+                <a style="padding:10px 20px;background-color:#ea1e30;text-decoration:none;color:#fffffe;border-radius:5px;display:inline-block;max-width:70%;font-size:16px;margin:10px 0" href="http://${process.env.CLIENT_SERVER}/verify/${token}">Xác nhận tài khoản</a>
                 <p>Cảm ơn và hẹn gặp lại bạn sau.</p>
                 <p style="color:#ea1e30">Chú ý: Email này chỉ có hiệu lực trong 10 phút kể từ khi email được gửi đến.</p>`
             }
@@ -125,7 +125,7 @@ const AuthController = {
                 // HTML body
                 html: `
                     <p>Chúng tôi có nhận được yêu cầu nhận lại mật khẩu tài khoản của bạn, bạn vui lòng nhấn nút màu đỏ dưới đây để chúng tôi đổi mật khẩu mới cho bạn</p>
-                    <a style="padding:10px 20px;background-color:#ea1e30;text-decoration:none;color:#fffffe;border-radius:5px;display:inline-block;max-width:70%;font-size:16px;margin:10px 0" href="${process.env.CLIENT_SERVER}/forgotPassword/${token}">Nhận mật khẩu mới</a>
+                    <a style="padding:10px 20px;background-color:#ea1e30;text-decoration:none;color:#fffffe;border-radius:5px;display:inline-block;max-width:70%;font-size:16px;margin:10px 0" href="${process.env.CLIENT}/forgotPassword/${token}">Nhận mật khẩu mới</a>
                     <p>Cảm ơn và hẹn gặp lại bạn sau.</p>
                     <p style="color:#ea1e30">Chú ý: Email này chỉ có hiệu lực trong 10 phút kể từ khi email được gửi đến.</p>`
             }
