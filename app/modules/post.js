@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const mongoose_delete = require('mongoose-delete');
-const PostStyle = require('./PostStyle');
+const { PostStyleSchemma } = require('./PostStyle');
 
 
 
@@ -15,7 +15,7 @@ const postSchema = new mongoose.Schema(
         comments: [{ type: mongoose.Types.ObjectId, ref: 'Comment' }],
         user: { type: mongoose.Types.ObjectId, ref: 'User' },
         status: Number,
-        styles: PostStyle.PostStyleSchemma,
+        styles: PostStyleSchemma,
         disableComment: {
             type: Boolean,
             default: false,
