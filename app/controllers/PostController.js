@@ -84,7 +84,7 @@ const PostController = {
         if (!post)
             return next(createRes.error('Bài viết này không tồn tại'))
         Posts.delete(
-            { id: req.params.id }, userId).exec(async function (err, result) {
+            { _id: req.params.id }, userId).exec(async function (err, result) {
                 if (err)
                     return next(err)
                 await Comments.deleteMany({ _id: { $in: post.comments } });
