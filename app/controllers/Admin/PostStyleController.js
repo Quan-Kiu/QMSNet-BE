@@ -1,6 +1,6 @@
 const { getFilter } = require('../../../utils/request_utils');
 const createRes = require('../../../utils/response_utils');
-const { PostStyles } = require('../../modules/PostStyle')
+const { PostStyles } = require('../../../app/modules/postStyle')
 const APIFeatures = require('../../../utils/pagination')
 
 
