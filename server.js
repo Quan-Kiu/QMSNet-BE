@@ -21,7 +21,7 @@ const http = require('http').Server(app);
 
 const io = require('socket.io')(http, {
     cors: {
-        origin: [`${process.env.CLIENT_SERVER}`, `${process.env.BACKEND_SERVER}`, `${process.env.ADMIN_SERVER}`],
+        origin: [`${process.env.CLIENT_SERVER}`, `${process.env.BACKEND_SERVER}`, `${process.env.ADMIN_SERVER},${process.env.CLIENT_SERVER_HTTPS}`, `${process.env.BACKEND_SERVER_HTTPS}`, `${process.env.ADMIN_SERVER_HTTPS}`],
         methods: ["GET", "POST"]
     }
 });
