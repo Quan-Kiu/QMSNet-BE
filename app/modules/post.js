@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const mongoose_delete = require('mongoose-delete');
-const { PostStyleSchemma } = require('./PostStyle');
+const { PostStyleSchemma } = require('../../app/modules/postStyle');
 
 
 
