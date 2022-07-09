@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({
     credentials: true,
-    origin: ['http://192.168.1.3:3000', 'http://192.168.1.3:3001']
+    origin: [`${process.env.CLIENT_SERVER},${process.env.BACKEND_SERVER},${process.env.ADMIN_SERVER}`]
 }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
