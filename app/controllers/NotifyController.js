@@ -29,7 +29,7 @@ const NotifyController = {
 
     getNotifies: async (req, res, next) => {
         try {
-            const notifies = await Notifies.find({
+            const data = await Notifies.find({
                 recipients: req.user._id,
 
             })
@@ -43,7 +43,7 @@ const NotifyController = {
                 .limit(40);
 
 
-            // const notifies = data.filter((n) => !n?.user?.deleted && n?.user?.status === 'A')
+            const notifies = data.filter((n) => !n?.deleted || n.deleted === false)
 
             return res.json(createRes.success('Success', notifies));
         } catch (err) {

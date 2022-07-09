@@ -4,6 +4,7 @@ const reportRoute = require("./report")
 const postRoute = require("./post")
 const commentRoute = require("./comment")
 const postStyleRoute = require("./postStyle")
+const notifyRoute = require("./notify")
 
 const adminRouters = [
     userRoute,
@@ -11,7 +12,8 @@ const adminRouters = [
     reportRoute,
     postRoute,
     commentRoute,
-    postStyleRoute
+    postStyleRoute,
+    notifyRoute
 ]
 
 module.exports = adminRouters;

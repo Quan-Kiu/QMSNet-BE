@@ -15,10 +15,7 @@ const ReportTypeController = {
                 hasDeletedFilter = true;
             }
 
-            console.log(filter)
-            console.log(hasDeletedFilter)
-
-            const features = new APIFeatures(await ReportTypes.find(filter), req.body).paginating();
+            const features = new APIFeatures(await ReportTypes.find(filter).sort('-createdAt'), req.body).paginating();
 
             if (hasDeletedFilter) {
                 features.query = features.query.filter((r) => !r.deleted)

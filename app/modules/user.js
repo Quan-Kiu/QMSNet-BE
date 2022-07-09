@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
             required: true,
             unique: true,
             minLength: 6,
-            maxLength: 30,
+            maxLength: 15,
         },
 
         email: {
@@ -81,7 +81,7 @@ const userSchema = new mongoose.Schema(
         story: {
             type: 'String',
             default: '',
-            maxLength: 200,
+            maxLength: 100,
         },
         friends: [
             {

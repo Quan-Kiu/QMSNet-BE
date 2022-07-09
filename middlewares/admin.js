@@ -4,7 +4,7 @@ const createRes = require('../utils/response_utils');
 
 const admin = async (req, res, next) => {
     try {
-        const token = req.header('Authorization').split(' ')[1];
+        const token = req?.header('Authorization')?.split(' ')[1];
 
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 

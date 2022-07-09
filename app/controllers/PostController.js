@@ -172,21 +172,38 @@ const PostController = {
 
     getPostById: async (req, res, next) => {
         try {
-            const post = await Posts.findOne({ _id: req.params.id, deleted: false })
-                .populate('user', '-password')
-                .populate({
-                    path: 'comments',
-                    populate: {
-                        match: {
-                            status: 'A',
-                            block: {
-                                $nin: req.user._id
-                            }
+            let post;
+
+            if (!req.user.isAdmin) {
+                post = await Posts.findOne({ _id: req.params.id, deleted: false })
+                    .populate('user', '-password')
+
+                    .populate({
+                        path: 'comments',
+                        populate: {
+                            match: {
+                                status: 'A',
+                                block: {
+                                    $nin: req.user._id
+                                }
+                            },
+                            path: 'user',
+                            select: '-password',
                         },
-                        path: 'user',
-                        select: '-password',
-                    },
-                });
+                    });
+            } else {
+                post = await Posts.findOne({ _id: req.params.id })
+                    .populate('user', '-password')
+
+                    .populate({
+                        path: 'comments',
+                        populate: {
+
+                            path: 'user',
+                            select: '-password',
+                        },
+                    });
+            }
             if (!post)
                 return next(createRes.error('Không tồn tại bài đăng này.'))
 

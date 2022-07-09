@@ -1,10 +1,10 @@
 const { getFilter } = require('../../../utils/request_utils');
 const createRes = require('../../../utils/response_utils');
-const { PostStyles } = require('../../../app/modules/postStyle')
+const Notifies = require('../../modules/notify')
 const APIFeatures = require('../../../utils/pagination')
 
 
-const PostStyleController = {
+const NotifyController = {
     getAll: async (req, res, next) => {
         try {
 
@@ -15,7 +15,7 @@ const PostStyleController = {
                 hasDeletedFilter = true;
             }
 
-            const features = new APIFeatures(await PostStyles.find(filter).sort('-createdAt'), req.body).paginating();
+            const features = new APIFeatures(await Notifies.find(filter).sort('-createdAt').populate('user', 'username _id'), req.body).paginating();
 
             if (hasDeletedFilter) {
                 features.query = features.query.filter((r) => !r.deleted)
@@ -40,7 +40,7 @@ const PostStyleController = {
         try {
             const data = req.body;
 
-            const report = new PostStyles(data);
+            const report = new Notifies(data);
 
             await report.save();
 
@@ -55,7 +55,7 @@ const PostStyleController = {
             const data = req.body;
             const id = req.params.id;
 
-            const report = await PostStyles.findOneAndUpdate({
+            const report = await Notifies.findOneAndUpdate({
                 _id: id
             }, data, {
                 new: true
@@ -73,7 +73,7 @@ const PostStyleController = {
             const userId = req.user._id;
             const id = req.params.id;
 
-            const report = await PostStyles.delete({
+            const report = await Notifies.delete({
                 _id: id
             }, userId);
 
@@ -86,4 +86,4 @@ const PostStyleController = {
 
 }
 
-module.exports = PostStyleController;
+module.exports = NotifyController;

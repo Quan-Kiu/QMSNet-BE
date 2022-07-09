@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoose_delete = require('mongoose-delete');
 
 const notifySchema = new mongoose.Schema(
     {
@@ -25,5 +26,7 @@ const notifySchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+notifySchema.plugin(mongoose_delete, { deletedAt: true, deletedBy: true })
 
 module.exports = mongoose.model('Notify', notifySchema);

@@ -83,7 +83,8 @@ const ReportController = {
             const id = req.params.id;
 
             const report = await Report.findOneAndUpdate({
-                _id: id
+                _id: id,
+                deleted: false,
             }, data, {
                 new: true
             }).populate('user', '-password').populate('post');
@@ -91,7 +92,7 @@ const ReportController = {
             if (report?.result) {
                 switch (report?.result) {
                     case 'W':
-                        const notify = await Notifies.findOneAndUpdate({
+                        await Notifies.findOneAndUpdate({
                             action: 6,
                             $or: [
                                 {

@@ -177,7 +177,6 @@ const MessageController = {
             const idStr = req.user._id.toString();
             const cutId = idStr.slice(((idStr.length - 1) - (req.user.username.length)));
             const newId = Buffer.from(idStr.replace(cutId, req.user.username))
-            console.log(newId)
             await Promise.all([
                 Messages.updateMany({
                     conversation: req.params.id,
