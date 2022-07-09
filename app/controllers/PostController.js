@@ -226,7 +226,8 @@ const PostController = {
                 data = await Posts.find(
                     {
                         user: req.params.id,
-                        status: 1
+                        status: 1,
+                        deleted: false
                     }).sort('-createdAt')
                     .populate('user', '-password')
                     .populate({
@@ -258,13 +259,23 @@ const PostController = {
         try {
             const post = await Posts.findOne({
                 _id: req.params.id,
-                status: 1,
                 deleted: false,
+                $or: [
+                    {
+                        user: req.user._id,
+                        status: [1, 2]
+                    },
+                    {
+                        user: { $ne: req.user._id },
+                        status: 1
+                    },
+                ]
 
 
             });
             if (!post)
-                return next(createRes.error('Không tồn tại bài đăng này, hoặc bài viết đang ở chế độ riêng tư không thể tương tác.'))
+                return next(createRes.error('Không tồn tại bài đăng này, hoặc bài viết đang ở chế độ riêng tư.'))
+
             if (post.likes.includes(req.user._id))
                 return next(createRes.error('Bạn đã like bài đăng này rồi.'))
             const isAuthorLiked = post.likes.includes(post.user);
@@ -323,14 +334,23 @@ const PostController = {
         try {
             const post = await Posts.findOne({
                 _id: req.params.id,
-                status: 1,
                 deleted: false,
+                $or: [
+                    {
+                        user: req.user._id,
+                        status: [1, 2]
+                    },
+                    {
+                        user: { $ne: req.user._id },
+                        status: 1
+                    },
+                ]
 
             });
             if (!post)
-                return next(createRes.error('Không tồn tại bài đăng này.'))
+                return next(createRes.error('Không tồn tại bài đăng này, hoặc bài viết đang ở chế độ riêng tư.'))
             if (!(post.likes.includes(req.user._id)))
-                return next(createRes.error('Bạn chưa like bài đăng này.'))
+                return next(createRes.error('Bạn chưa thích bài đăng này.'))
 
             const newPost = await Posts.findOneAndUpdate(
                 { _id: req.params.id },
@@ -434,7 +454,16 @@ const PostController = {
                 Posts.find(
                     {
                         _id: req.body.postIds,
-                        deleted: false
+                        deleted: false,
+                        $or: [{
+                            user: req.user._id,
+                            status: [1, 2]
+                        }, {
+                            user: {
+                                $ne: req.user._id
+                            },
+                            status: 1
+                        }]
                     }
                 ),
                 req.query
@@ -454,7 +483,7 @@ const PostController = {
 
 
                 });
-            const resPost = posts.filter((p) => p.user.status === 'A');
+            const resPost = posts.filter((p) => p.user.status === 'A' && !p.user.deleted);
             return res.json(createRes.success('Thành công', {
                 posts: resPost, pagination: {
                     page: req?.query?.page,
