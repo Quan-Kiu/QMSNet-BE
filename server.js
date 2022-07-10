@@ -11,8 +11,8 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({
+    origin: [`${process.env.CLIENT_SERVER}`, `${process.env.BACKEND_SERVER}`, `${process.env.ADMIN_SERVER}`],
     credentials: true,
-    origin: [`${process.env.CLIENT_SERVER},${process.env.BACKEND_SERVER},${process.env.ADMIN_SERVER}`]
 }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

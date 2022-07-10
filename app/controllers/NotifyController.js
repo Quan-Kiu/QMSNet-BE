@@ -80,6 +80,35 @@ const NotifyController = {
             return next(err);
         }
     },
+    UnReadNotify: async (req, res, next) => {
+        try {
+            const notifies = await Notifies.findOneAndUpdate(
+                { _id: req.params.id },
+                {
+                    isRead: false,
+                }, {
+                new: true,
+                timestamps: false,
+            }
+            );
+
+            return res.json(createRes.success('Đánh dấu chưa đọc thành công.', notifies));
+        } catch (err) {
+            return next(err);
+        }
+    },
+    DeleteNotify: async (req, res, next) => {
+        const userId = req.user._id;
+        try {
+            const notifies = await Notifies.delete(
+                { _id: req.params.id }
+                , userId);
+
+            return res.json(createRes.success('Gỡ thông báo cáo thành công', notifies));
+        } catch (err) {
+            return next(err);
+        }
+    },
 };
 
 module.exports = NotifyController;
