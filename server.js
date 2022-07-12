@@ -10,12 +10,15 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-    origin: [`${process.env.CLIENT_SERVER}`, `${process.env.BACKEND_SERVER}`, `${process.env.ADMIN_SERVER}`],
+const corsConfig = {
+    origin: true,
     credentials: true,
-}));
+};
+app.use(cors(corsConfig));
+app.options('*', cors(corsConfig));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
 
 // Connect DB
 db.connect();
