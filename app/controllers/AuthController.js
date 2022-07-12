@@ -112,7 +112,7 @@ const AuthController = {
 
             }
         } catch (error) {
-            next(error)
+            next({ message: 'Có thể mã xác nhận của bạn đã hết hạn. Vui lòng thử lại.' })
         }
     },
 
@@ -142,8 +142,7 @@ const AuthController = {
 
             }));
         } catch (error) {
-            next(error)
-
+            next({ message: 'Có thể mã xác nhận của bạn đã hết hạn. Vui lòng thử lại.' })
         }
     },
 
