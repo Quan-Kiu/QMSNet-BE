@@ -216,14 +216,18 @@ const AuthController = {
                     'Rất tiếc, email của bạn không đúng. Vui lòng kiểm tra lại email.',
                 ));
 
-
-
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch)
                 return next(createRes.error(
                     'Rất tiếc, mật khẩu của bạn không đúng. Vui lòng kiểm tra lại mật khẩu.',
 
                 ));
+
+            if (user.deleted) {
+                return next(createRes.error(
+                    'Tài khoản của bạn đã bị xóa, vui lòng liên hệ support@qmnets.social để được hỗ trợ.',
+                ));
+            }
 
             if (user.status !== 'A') {
                 if (user.status === 'B') {
@@ -281,20 +285,20 @@ const AuthController = {
         try {
             const rf_token = req.cookies.refreshtoken;
             if (!rf_token) {
-                return next(createRes.error('Vui lòng đăng nhập lại.'))
+                return next(createRes.error('Vui lòng đăng nhập lại.', 401))
             }
             jwt.verify(
                 rf_token,
                 process.env.REFRESH_TOKEN_SECRET,
                 async (err, result) => {
                     if (err)
-                        return next(createRes.error('Vui lòng đăng nhập lại.'))
+                        return next(createRes.error('Vui lòng đăng nhập lại.', 401))
                     const user = await Users.findById(result.id)
                         .select('-password')
 
 
                     if (!user)
-                        return next(createRes.error('Tài khoản không tồn tại.'))
+                        return next(createRes.error('Tài khoản không tồn tại.', 401))
                     if (user.status !== 'A')
                         return next(createRes.error('Tài khoản chưa được kích hoạt, vui lòng kích hoạt tài khoản của bạn.', 403, user))
                     const accessToken = createAccessToken({ id: result.id });
