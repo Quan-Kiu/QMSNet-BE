@@ -19,7 +19,6 @@ app.options('*', cors(corsConfig));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
 // Connect DB
 db.connect();
 

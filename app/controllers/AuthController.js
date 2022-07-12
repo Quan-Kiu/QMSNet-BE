@@ -229,7 +229,7 @@ const AuthController = {
                 if (user.status === 'B') {
 
                     return next(createRes.error(
-                        'Tài khoản của bạn đã bị khóa, vui lòng liên hệ quankiugl@gmail.com để được hỗ trợ.',
+                        'Tài khoản của bạn đã bị khóa, vui lòng liên hệ support@qmnets.social để được hỗ trợ.',
                     ));
                 }
                 return next(createRes.error(

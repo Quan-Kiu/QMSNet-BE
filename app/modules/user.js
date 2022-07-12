@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
             type: 'String',
             required: true,
             minLength: 6,
+            maxlength: 30
         },
 
         avatar: {
@@ -83,13 +84,7 @@ const userSchema = new mongoose.Schema(
             default: '',
             maxLength: 100,
         },
-        friends: [
-            {
-                type: mongoose.Types.ObjectId,
-                ref: 'User',
-            },
 
-        ],
         blocks: [
             {
                 type: mongoose.Types.ObjectId,
