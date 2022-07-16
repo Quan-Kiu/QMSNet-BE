@@ -134,16 +134,16 @@ const ReportController = {
                             const mailInfo = {
                                 from: process.env.ADMIN_EMAIL, // sender address
                                 to: `${user?.email}`, // list of receivers
-                                subject: `QMNets xin chào! Tài khoản ${user.username}. của bạn đã bị khóa.`, // Subject line
+                                subject: `QMNets xin chào! Tài khoản ${user.username} của bạn đã bị khóa.`, // Subject line
                                 text: `Xin chào ${user?.email}!`,
                                 // HTML body
                                 html: `
                                 <p>Chào bạn!....</p>
-                                <p>Tài khoản của bạn đã bị khóa vì <b>Vi phạm nội dung trên QMNets quá số lần quy định</b>, bạn vui lòng liên hệ <a href="mailto: support@qmnets.social">Support@qmnets.social</a> để được hỗ trợ.</p>
+                                <p>Tài khoản <b>${user.username}</b> của bạn đã bị khóa vì <b>Vi phạm nội dung trên QMNets quá số lần quy định</b>, bạn vui lòng liên hệ <a href="mailto: support@qmnets.social">Support@qmnets.social</a> để được hỗ trợ.</p>
                                 <p>Cảm ơn và hẹn gặp lại bạn sau.</p>
                                 <p style="color:#ea1e30">Chú ý: Không trả lời email này.</p>`
                             }
-                            await sendMail(mailInfo);
+                            sendMail(mailInfo);
 
                         }
 
@@ -181,17 +181,17 @@ const ReportController = {
                         const mailInfo = {
                             from: process.env.ADMIN_EMAIL, // sender address
                             to: `${user?.email}`, // list of receivers
-                            subject: `QMNets xin chào! Tài khoản ${user.username}. của bạn đã bị khóa.`, // Subject line
+                            subject: `QMNets xin chào! Tài khoản ${user.username} của bạn đã bị khóa.`, // Subject line
                             text: `Xin chào ${user?.email}!`,
                             // HTML body
                             html: `
                             <p>Chào bạn!....</p>
-                            <p>Tài khoản của bạn đã bị khóa vì <b>Vi phạm nội dung trên QMNets</b>, bạn vui lòng liên hệ <a href="mailto: support@qmnets.social">Support@qmnets.social</a> để được hỗ trợ.</p>
+                            <p>Tài khoản của bạn <b>${user.username}</b> đã bị khóa vì <b>Vi phạm nội dung trên QMNets</b>, bạn vui lòng liên hệ <a href="mailto: support@qmnets.social">Support@qmnets.social</a> để được hỗ trợ.</p>
                             <p>Cảm ơn và hẹn gặp lại bạn sau.</p>
                             <p style="color:#ea1e30">Chú ý: Không trả lời email này.</p>`
                         }
 
-                        await sendMail(mailInfo);
+                        sendMail(mailInfo);
 
                         break;
 

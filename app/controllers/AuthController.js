@@ -77,7 +77,7 @@ const AuthController = {
                 <p style="color:#ea1e30">Chú ý: Email này chỉ có hiệu lực trong 10 phút kể từ khi email được gửi đến.</p>`
             }
 
-            await sendMail(mailInfo);
+            sendMail(mailInfo);
 
             await newUser.save();
 
@@ -137,7 +137,7 @@ const AuthController = {
                     <p>Cảm ơn và hẹn gặp lại bạn sau.</p>
                     <p style="color:#ea1e30">Chú ý: Email này chỉ có hiệu lực trong 10 phút kể từ khi email được gửi đến.</p>`
             }
-            await sendMail(mailInfo);
+            sendMail(mailInfo);
             return res.status(201).json(createRes.success('Vui lòng kiểm tra email của bạn.', {
 
             }));
@@ -194,7 +194,7 @@ const AuthController = {
                 <p style="color:#ea1e30">Chú ý: Email này chỉ có hiệu lực trong 10 phút kể từ khi email được gửi đến.</p>`
             }
 
-            await sendMail(mailInfo);
+            sendMail(mailInfo);
 
             return res.status(201).json(createRes.success('Vui lòng kiểm tra email của bạn.', {
 
