@@ -7,7 +7,6 @@ const auth = require("../../middlewares/auth");
 
 routes.post('/notifies/getAll', auth, NotifyController.getAll)
 routes.post('/notifies', admin, NotifyController.new)
-routes.patch('/notifies/:id', admin, NotifyController.update)
 routes.delete('/notifies/:id', admin, NotifyController.delete)
 
 module.exports = routes;

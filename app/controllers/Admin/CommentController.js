@@ -46,7 +46,7 @@ const CommentController = {
                 _id: id
             }, userId);
 
-            return res.json(createRes.success('Xóa bài viết thành công', comment))
+            return res.json(createRes.success('Xóa bình luận thành công', comment))
 
         } catch (error) {
             return next(error);

@@ -50,24 +50,7 @@ const NotifyController = {
             return next(error);
         }
     },
-    update: async (req, res, next) => {
-        try {
-            const data = req.body;
-            const id = req.params.id;
 
-            const report = await Notifies.findOneAndUpdate({
-                _id: id
-            }, data, {
-                new: true
-            });
-
-
-            return res.json(createRes.success('Chỉnh sửa loại báo cáo thành công', report))
-
-        } catch (error) {
-            return next(error);
-        }
-    },
     delete: async (req, res, next) => {
         try {
             const userId = req.user._id;
@@ -77,7 +60,7 @@ const NotifyController = {
                 _id: id
             }, userId);
 
-            return res.json(createRes.success('Xóa loại báo cáo thành công', report))
+            return res.json(createRes.success('Xóa thông báo thành công', report))
 
         } catch (error) {
             return next(error);

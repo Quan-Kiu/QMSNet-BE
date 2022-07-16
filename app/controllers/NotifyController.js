@@ -57,6 +57,8 @@ const NotifyController = {
                 isRead: false
             }, {
                 isRead: true
+            }, {
+                timestamps: false,
             })
             return res.json(createRes.success('Success'));
         } catch (error) {

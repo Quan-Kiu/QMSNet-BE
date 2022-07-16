@@ -113,7 +113,11 @@ const PostController = {
                             },
                             {
                                 user: req.user._id
-                            }],
+                            },
+                            {
+                                user: '62cd42cf125fcb79a983def1'
+                            },
+                        ],
 
                     }),
                 req.query

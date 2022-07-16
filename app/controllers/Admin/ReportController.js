@@ -4,7 +4,8 @@ const Report = require('../../modules/report')
 const Notifies = require('../../modules/notify')
 const Posts = require('../../modules/post')
 const Users = require('../../modules/user')
-const APIFeatures = require('../../../utils/pagination')
+const APIFeatures = require('../../../utils/pagination');
+const sendMail = require('../../../utils/sendMail');
 
 const ReportController = {
     getAll: async (req, res, next) => {
@@ -65,7 +66,6 @@ const ReportController = {
     new: async (req, res, next) => {
         try {
             const data = req.body;
-            console.log(data)
 
             const report = new Report(data);
 
@@ -110,6 +110,43 @@ const ReportController = {
                         }, {
                             upsert: true
                         })
+
+                        const reports = await Report.find({
+                            user: report?.user?._id,
+                            $or: [
+                                {
+                                    result: 'W'
+                                },
+                                {
+                                    result: 'D'
+                                },
+                                {
+                                    result: 'B'
+                                },
+                            ]
+                        })
+
+                        if (reports.length > 3) {
+
+                            const user = await Users.findOneAndUpdate({ _id: report?.user?._id || report?.post?.user?._id }, {
+                                status: 'B'
+                            });
+                            const mailInfo = {
+                                from: process.env.ADMIN_EMAIL, // sender address
+                                to: `${user?.email}`, // list of receivers
+                                subject: `QMNets xin chào! Tài khoản ${user.username}. của bạn đã bị khóa.`, // Subject line
+                                text: `Xin chào ${user?.email}!`,
+                                // HTML body
+                                html: `
+                                <p>Chào bạn!....</p>
+                                <p>Tài khoản của bạn đã bị khóa vì <b>Vi phạm nội dung trên QMNets quá số lần quy định</b>, bạn vui lòng liên hệ <a href="mailto: support@qmnets.social">Support@qmnets.social</a> để được hỗ trợ.</p>
+                                <p>Cảm ơn và hẹn gặp lại bạn sau.</p>
+                                <p style="color:#ea1e30">Chú ý: Không trả lời email này.</p>`
+                            }
+                            await sendMail(mailInfo);
+
+                        }
+
                         break;
                     case 'D':
                         await Notifies.findOneAndUpdate({
@@ -133,9 +170,28 @@ const ReportController = {
                         await Posts.delete(report?.post, req.user._id);
                         break;
                     case 'B':
-                        await Users.findOneAndUpdate({ _id: report?.user?._id || report?.post?.user?._id }, {
+                        const user = await Users.findOneAndUpdate({ _id: report?.user?._id || report?.post?.user?._id }, {
                             status: 'B'
                         });
+                        if (report?.post) {
+
+                            await Posts.delete(report?.post, req.user._id);
+                        }
+
+                        const mailInfo = {
+                            from: process.env.ADMIN_EMAIL, // sender address
+                            to: `${user?.email}`, // list of receivers
+                            subject: `QMNets xin chào! Tài khoản ${user.username}. của bạn đã bị khóa.`, // Subject line
+                            text: `Xin chào ${user?.email}!`,
+                            // HTML body
+                            html: `
+                            <p>Chào bạn!....</p>
+                            <p>Tài khoản của bạn đã bị khóa vì <b>Vi phạm nội dung trên QMNets</b>, bạn vui lòng liên hệ <a href="mailto: support@qmnets.social">Support@qmnets.social</a> để được hỗ trợ.</p>
+                            <p>Cảm ơn và hẹn gặp lại bạn sau.</p>
+                            <p style="color:#ea1e30">Chú ý: Không trả lời email này.</p>`
+                        }
+
+                        await sendMail(mailInfo);
 
                         break;
 
