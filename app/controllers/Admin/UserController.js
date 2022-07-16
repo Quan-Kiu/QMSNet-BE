@@ -63,10 +63,10 @@ const UserController = {
             const { fullname, email, password, username } = req.body;
             let newUsername = username.toLowerCase().replace(/ /g, '');
             const user_name = await Users.findOne({ username: newUsername });
-            const regex = /^[a-zA-Z]+$/
+            const regex = /^[a-z0-9]+$/
             if (!regex.test(newUsername)) {
 
-                return next(createRes.error('Rất tiếc, tên tài khoản này đã tồn tại. Vui lòng sử dụng tên tài khoản khác.'));
+                return next(createRes.error('Tên tài khoản chỉ chứa những kí tự a-z 0-9.'));
             }
             if (user_name)
                 return next(createRes.error('Rất tiếc, tên tài khoản này không hợp lệ. Vui lòng sử dụng tên tài khoản khác.'));

@@ -2,7 +2,6 @@ const createRes = require('../../../utils/response_utils');
 const { getFilter } = require('../../../utils/request_utils');
 const Comments = require('../../modules/comment')
 const APIFeatures = require('../../../utils/pagination');
-const mongoose = require('mongoose');
 
 const CommentController = {
     getAll: async (req, res, next) => {

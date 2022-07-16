@@ -62,7 +62,7 @@ const PostStyleController = {
             });
 
 
-            return res.json(createRes.success('Chỉnh sửa loại báo cáo thành công', report))
+            return res.json(createRes.success('Chỉnh sửa chủ đề bài viết thành công', report))
 
         } catch (error) {
             return next(error);
@@ -77,7 +77,7 @@ const PostStyleController = {
                 _id: id
             }, userId);
 
-            return res.json(createRes.success('Xóa loại báo cáo thành công', report))
+            return res.json(createRes.success('Xóa chủ đề bài viết thành công', report))
 
         } catch (error) {
             return next(error);
