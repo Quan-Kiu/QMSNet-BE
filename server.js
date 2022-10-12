@@ -14,7 +14,9 @@ const corsConfig = {
     origin: true,
     credentials: true,
 };
+
 app.use(cors(corsConfig));
+
 app.options('*', cors(corsConfig));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
