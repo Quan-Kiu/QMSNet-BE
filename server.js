@@ -7,6 +7,7 @@ const cors = require('cors');
 const socketSever = require('./socketSever');
 const port = process.env.PORT || 5000;
 const app = express();
+const { Server } = require('socket.io');
 
 // Middleware
 app.use(express.json());
@@ -26,10 +27,11 @@ db.connect();
 
 const http = require('http').Server(app);
 
-const io = require('socket.io')(http, {
+const io = new Server(http, {
     cors: {
-        // origin: [`${process.env.CLIENT_SERVER}`, `${process.env.BACKEND_SERVER}`, `${process.env.ADMIN_SERVER}`],
-        methods: ["GET", "POST"]
+        origin: [`${process.env.CLIENT_SERVER}`, `${process.env.BACKEND_SERVER}`, `${process.env.ADMIN_SERVER}`],
+        methods: ["GET", "POST", "PUT", "PATCH"],
+        allowedHeaders: ["Content-type"],
     }
 });
 
